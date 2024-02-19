@@ -86,7 +86,7 @@ const misc: Misc[] = [
     teamSize: "4",
     duration: "2 months",
     videoid: "kMtXJYT95oc",
-    date: "Feburary - April 2021",
+    date: "February - April 2021",
   },
   {
     name: "Into the Depths",
@@ -136,12 +136,12 @@ const misc: Misc[] = [
 
 export default function Home() {
   return (
-    <main className="flex text-white bg-zinc-950 min-h-screen flex-col items-center min-w-full">
+    <main className="flex text-white bg-zinc-950 min-h-screen flex-col items-center min-w-full p-4">
       <div className="max-w-3xl w-full ">
-        <section className="py-10 flex flex-row justify-between">
+        <section className="py-4 md:py-10 flex flex-row justify-between">
           <div>
             <h1 className="font-bold text-xl p-0 m-0 ">Rhys Sullivan</h1>
-            <span className="text-neutral-200 p-0 m-0">Product Engineer</span>
+            <span className="text-neutral-200 p-0 m-0">Software Engineer</span>
           </div>
           <div className="flex gap-4">
             <a
@@ -166,18 +166,31 @@ export default function Home() {
           <h2 className="text-xl font-bold">Career</h2>
           {carerItems.map((item, index) => (
             <div key={index}>
-              <div className="min-w-full flex flex-row justify-between">
-                <div className="flex flew-row">
-                  <h3 className="font-bold">{item.company}</h3>
-                  <span className="mx-2 font-bold">-</span>
-                  <span className="font-bold">{item.product}</span>
-                  <i className="mx-2">{item.title}</i>
+              <div>
+                <div className="min-w-full flex-row justify-between hidden md:flex">
+                  <div className="flex flew-row">
+                    <h3 className="font-bold">{item.company}</h3>
+                    <span className="mx-2 font-bold">-</span>
+                    <span className="font-bold">{item.product}</span>
+                    <i className="mx-2">{item.title}</i>
+                  </div>
+                  <div>
+                    <span>{item.date}</span>
+                  </div>
                 </div>
-                <div>
-                  <span>{item.date}</span>
+                <span>{item.description}</span>
+                <div className="flex flex-col md:hidden justify-start">
+                  <div className="flex flew-row justify-start">
+                    <h3 className="font-bold">{item.company}</h3>
+                    <span className="mx-2 font-bold">-</span>
+                    <span className="font-bold">{item.product}</span>
+                  </div>
+                  <i>{item.title}</i>
+                  <div>
+                    <span>{item.date}</span>
+                  </div>
                 </div>
               </div>
-              <span>{item.description}</span>
             </div>
           ))}
         </section>
@@ -209,7 +222,7 @@ export default function Home() {
         <section className="text-left w-full flex gap-4 flex-col mt-4 py-4 border-t-2 border-zinc-800 rounded-e-md">
           <h2 className="text-xl font-bold">Past Projects</h2>
           {misc.map((item, index) => (
-            <div key={index} className="pb-8">
+            <div key={index} className="pb-8 border-b-2 border-zinc-900">
               <div className="min-w-full flex flex-row justify-between">
                 <div className="flex flew-row">
                   <h3 className="font-bold">{item.name}</h3>
