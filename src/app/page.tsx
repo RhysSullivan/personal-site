@@ -138,7 +138,7 @@ export default function Home() {
   return (
     <main className="flex text-white bg-zinc-950 min-h-screen flex-col items-center min-w-full p-4">
       <div className="max-w-3xl w-full ">
-        <section className="py-4 md:py-10 flex flex-row justify-between">
+        <section className="py-4 sm:py-10 flex flex-row justify-between">
           <div>
             <h1 className="font-bold text-xl p-0 m-0 ">Rhys Sullivan</h1>
             <span className="text-neutral-200 p-0 m-0">Software Engineer</span>
@@ -167,7 +167,7 @@ export default function Home() {
           {carerItems.map((item, index) => (
             <div key={index}>
               <div>
-                <div className="min-w-full flex-row justify-between hidden md:flex">
+                <div className="min-w-full flex-row justify-between hidden sm:flex">
                   <div className="flex flew-row">
                     <h3 className="font-bold">{item.company}</h3>
                     <span className="mx-2 font-bold">-</span>
@@ -179,7 +179,7 @@ export default function Home() {
                   </div>
                 </div>
                 <span>{item.description}</span>
-                <div className="flex flex-col md:hidden justify-start">
+                <div className="flex flex-col sm:hidden justify-start">
                   <div className="flex flew-row justify-start">
                     <h3 className="font-bold">{item.company}</h3>
                     <span className="mx-2 font-bold">-</span>
