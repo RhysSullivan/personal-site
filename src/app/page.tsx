@@ -1,5 +1,11 @@
 import { YouTubeEmbed } from "@next/third-parties/google";
 import { GitHub, Twitter } from "./icons";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Rhys Sullivan",
+  description: "Portfolio website for Rhys Sullivan, Product Engineer",
+};
 
 type CareerItem = {
   company: React.ReactNode;
