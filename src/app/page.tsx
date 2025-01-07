@@ -16,8 +16,15 @@ type CareerItem = {
 };
 const carerItems: CareerItem[] = [
   {
+    company: "Dosu",
+    date: "August 2024 - December 2024",
+    product: "",
+    description: "",
+    title: "Product Engineer",
+  },
+  {
     company: "Microsoft",
-    date: "August 2023 - Present",
+    date: "August 2023 - August 2024",
     product: "Teams",
     description: "",
     title: "Software Engineer",
