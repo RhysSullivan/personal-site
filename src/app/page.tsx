@@ -70,7 +70,7 @@ const projectItems: ProjectItem[] = [
   {
     name: "Answer Overflow",
     description:
-      "Open source webpages for Discord forum channels. Bootstrapped to 350k MAU, built with Next.js, TypeScript, and Turborepo, tRPC, and Drizzle.",
+      "Open source webpages for Discord forum channels. Bootstrapped to 350k MAU, built with Next.js, TypeScript, and Turborepo, tRPC, and Convex.",
     url: "https://www.answeroverflow.com",
     date: "January 2022 - Present",
   },
