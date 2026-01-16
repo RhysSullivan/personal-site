@@ -16,6 +16,13 @@ type CareerItem = {
 };
 const carerItems: CareerItem[] = [
   {
+    company: "Vercel",
+    date: "January 2025 - Now",
+    product: "",
+    description: "",
+    title: "Software Engineer",
+  },
+  {
     company: "Dosu",
     date: "August 2024 - December 2024",
     product: "",
