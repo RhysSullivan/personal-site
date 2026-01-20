@@ -21,8 +21,30 @@ const photos = (await getCollection("photos")).map((photo) => ({
 }));
 
 const feed = [...posts, ...ideas, ...photos].sort(
-  (a, b) => b.date.valueOf() - a.date.valueOf(),
+  (a, b) => b.date.valueOf() - a.date.valueOf()
 );
+
+// Group by day with year tracking
+type FeedItem = (typeof feed)[number];
+type DayGroup = { date: string; year: number; items: FeedItem[] };
+
+const groupedByDay: DayGroup[] = [];
+let currentYear: number | null = null;
+
+feed.forEach((item) => {
+  const year = item.date.getFullYear();
+  const dateKey = item.date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+
+  const lastGroup = groupedByDay[groupedByDay.length - 1];
+  if (lastGroup && lastGroup.date === dateKey && lastGroup.year === year) {
+    lastGroup.items.push(item);
+  } else {
+    groupedByDay.push({ date: dateKey, year, items: [item] });
+  }
+});
 
 const statusColors: Record<string, string> = {
   thinking: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
@@ -62,96 +84,102 @@ const statusColors: Record<string, string> = {
       <GitHubContributions username="rhyssullivan" />
     </section>
 
-    <section class="space-y-4">
+    <section>
       {
-        feed.map((item) => {
-          if (item.type === "blog") {
-            return (
-              <a
-                href={`/blog/${item.data.slug}`}
-                class="group block p-4 -mx-4 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
-              >
-                <div class="flex items-center gap-2 mb-1">
-                  <span class="text-xs text-[var(--text-muted)]">blog</span>
-                  <span class="text-xs text-[var(--text-muted)]">·</span>
-                  <span class="text-xs text-[var(--text-muted)]">
-                    {item.date.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
-                <h3 class="font-medium group-hover:text-[var(--accent)] transition-colors">
-                  {item.data.data.title}
-                </h3>
-                <p class="text-sm text-[var(--text-muted)] mt-1">
-                  {item.data.data.description}
-                </p>
-              </a>
-            );
-          }
+        groupedByDay.map((group, groupIndex) => {
+          const prevGroup = groupedByDay[groupIndex - 1];
+          const isNewYear = !prevGroup || prevGroup.year !== group.year;
 
-          if (item.type === "idea") {
-            return (
-              <a
-                href={`/ideas/${item.data.slug}`}
-                class="group block p-4 -mx-4 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
-              >
-                <div class="flex items-center gap-2 mb-1">
-                  <span class="text-xs text-[var(--text-muted)]">idea</span>
-                  <span class="text-xs text-[var(--text-muted)]">·</span>
-                  <span class="text-xs text-[var(--text-muted)]">
-                    {item.date.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
-                  <span
-                    class={`text-xs px-2 py-0.5 rounded-full ${statusColors[item.data.data.status]}`}
-                  >
-                    {item.data.data.status}
-                  </span>
+          return (
+            <>
+              {isNewYear && groupIndex > 0 && (
+                <div class="flex gap-6 items-center py-4">
+                  <div class="w-16 text-right shrink-0">
+                    <span class="text-sm font-medium text-[var(--text)]">
+                      {group.year}
+                    </span>
+                  </div>
+                  <div class="flex-1 h-px bg-[var(--border)]" />
                 </div>
-                <h3 class="font-medium group-hover:text-[var(--accent)] transition-colors">
-                  {item.data.data.title}
-                </h3>
-                <p class="text-sm text-[var(--text-muted)] mt-1">
-                  {item.data.data.description}
-                </p>
-              </a>
-            );
-          }
+              )}
+              <div class="flex gap-6">
+                <div class="flex flex-col items-center">
+                  <div class="text-xs text-[var(--text-muted)] w-16 text-right shrink-0 pt-2">
+                    {group.date}
+                  </div>
+                  {groupIndex < groupedByDay.length - 1 && (
+                    <div class="w-px bg-[var(--border)] flex-1 mt-2" />
+                  )}
+                </div>
+                <div class="flex-1 pb-6">
+                  {group.items.map((item) => {
+                    if (item.type === "blog") {
+                      return (
+                        <a
+                          href={`/blog/${item.data.slug}`}
+                          class="group flex items-center gap-3 py-2 px-3 -mx-3 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
+                        >
+                          <span class="text-xs text-[var(--text-muted)] w-10 shrink-0">
+                            blog
+                          </span>
+                          <span class="font-medium group-hover:text-[var(--accent)] transition-colors">
+                            {item.data.data.title}
+                          </span>
+                        </a>
+                      );
+                    }
 
-          if (item.type === "photo") {
-            return (
-              <a
-                href={`/photos/${item.data.slug}`}
-                class="group block p-4 -mx-4 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
-              >
-                <div class="flex items-center gap-2 mb-2">
-                  <span class="text-xs text-[var(--text-muted)]">space</span>
-                  <span class="text-xs text-[var(--text-muted)]">·</span>
-                  <span class="text-xs text-[var(--text-muted)]">
-                    {item.date.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
+                    if (item.type === "idea") {
+                      return (
+                        <a
+                          href={`/ideas/${item.data.slug}`}
+                          class="group flex items-center gap-3 py-2 px-3 -mx-3 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
+                        >
+                          <span class="text-xs text-[var(--text-muted)] w-10 shrink-0">
+                            idea
+                          </span>
+                          <span class="font-medium group-hover:text-[var(--accent)] transition-colors">
+                            {item.data.data.title}
+                          </span>
+                          <span
+                            class={`text-xs px-2 py-0.5 rounded-full shrink-0 ${statusColors[item.data.data.status]}`}
+                          >
+                            {item.data.data.status}
+                          </span>
+                        </a>
+                      );
+                    }
+
+                    if (item.type === "photo") {
+                      return (
+                        <a
+                          href={`/photos/${item.data.slug}`}
+                          class="group block py-2 px-3 -mx-3 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
+                        >
+                          <div class="flex items-center gap-3 mb-2">
+                            <span class="text-xs text-[var(--text-muted)] w-10 shrink-0">
+                              space
+                            </span>
+                            <span class="font-medium group-hover:text-[var(--accent)] transition-colors">
+                              {item.data.data.title}
+                            </span>
+                          </div>
+                          <div class="overflow-hidden rounded-lg max-w-xs ml-[52px]">
+                            <CroppedImage
+                              src={item.data.data.image}
+                              alt={item.data.data.alt}
+                              cropArea={item.data.data.cropArea}
+                              class="w-full"
+                            />
+                          </div>
+                        </a>
+                      );
+                    }
+                  })}
                 </div>
-                <div class="overflow-hidden rounded-lg max-w-sm">
-                  <CroppedImage
-                    src={item.data.data.image}
-                    alt={item.data.data.alt}
-                    cropArea={item.data.data.cropArea}
-                    class="w-full"
-                  />
-                </div>
-                <h3 class="font-medium mt-2 group-hover:text-[var(--accent)] transition-colors">
-                  {item.data.data.title}
-                </h3>
-              </a>
-            );
-          }
+              </div>
+            </>
+          );
         })
       }
     </section>
