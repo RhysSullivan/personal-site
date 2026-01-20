@@ -22,26 +22,26 @@ const formattedDate = photo.data.date.toLocaleDateString('en-US', {
 });
 ---
 
-<Base title={`${photo.data.title} - Rhys Sullivan`} description={photo.data.alt}>
+<Base title={`${photo.data.title} - Rhys Sullivan`} description={photo.data.alt} wide>
   <article>
     <a href="/photos" class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-6 inline-block">
-      &larr; back to photos
+      &larr; back to space
     </a>
     
-    <div class="mb-6">
+    <div class="mb-8 -mx-6 sm:mx-0">
       <img
         src={photo.data.src}
         alt={photo.data.alt}
-        class="w-full rounded-lg"
+        class="w-full sm:rounded-lg max-h-[80vh] object-contain bg-black"
       />
     </div>
 
-    <header class="mb-6">
+    <header class="mb-6 max-w-2xl">
       <h1 class="text-2xl font-semibold tracking-tight">{photo.data.title}</h1>
       <time class="text-sm text-[var(--text-muted)]">{formattedDate}</time>
     </header>
 
-    <div class="prose">
+    <div class="prose max-w-2xl">
       <Content />
     </div>
   </article>
