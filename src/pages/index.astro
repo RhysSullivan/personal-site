@@ -1,27 +1,35 @@
 ---
-import Base from '../layouts/Base.astro';
-import CroppedImage from '../components/CroppedImage.astro';
-import { getCollection } from 'astro:content';
+import Base from "../layouts/Base.astro";
+import CroppedImage from "../components/CroppedImage.astro";
+import GitHubContributions from "../components/GitHubContributions.astro";
+import { getCollection } from "astro:content";
 
-const posts = (await getCollection('blog'))
+const posts = (await getCollection("blog"))
   .filter((post) => !post.data.draft)
-  .map((post) => ({ type: 'blog' as const, date: post.data.date, data: post }));
+  .map((post) => ({ type: "blog" as const, date: post.data.date, data: post }));
 
-const ideas = (await getCollection('ideas'))
-  .map((idea) => ({ type: 'idea' as const, date: idea.data.date, data: idea }));
+const ideas = (await getCollection("ideas")).map((idea) => ({
+  type: "idea" as const,
+  date: idea.data.date,
+  data: idea,
+}));
 
-const photos = (await getCollection('photos'))
-  .map((photo) => ({ type: 'photo' as const, date: photo.data.date, data: photo }));
+const photos = (await getCollection("photos")).map((photo) => ({
+  type: "photo" as const,
+  date: photo.data.date,
+  data: photo,
+}));
 
-const feed = [...posts, ...ideas, ...photos]
-  .sort((a, b) => b.date.valueOf() - a.date.valueOf());
+const feed = [...posts, ...ideas, ...photos].sort(
+  (a, b) => b.date.valueOf() - a.date.valueOf(),
+);
 
 const statusColors: Record<string, string> = {
-  thinking: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400',
-  exploring: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-  building: 'bg-green-500/10 text-green-600 dark:text-green-400',
-  shipped: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
-  abandoned: 'bg-zinc-500/10 text-zinc-500',
+  thinking: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
+  exploring: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  building: "bg-green-500/10 text-green-600 dark:text-green-400",
+  shipped: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+  abandoned: "bg-zinc-500/10 text-zinc-500",
 };
 ---
 
@@ -30,7 +38,7 @@ const statusColors: Record<string, string> = {
     <section>
       <h1 class="text-2xl font-semibold tracking-tight mb-4">Rhys Sullivan</h1>
       <p class="text-[var(--text-muted)] leading-relaxed">
-        Software engineer. Currently at Vercel. I like building things, taking photos of space, and thinking about ideas that may never ship.
+        Software engineer. Currently at Vercel.
       </p>
       <div class="flex gap-4 mt-4">
         <a
@@ -50,66 +58,102 @@ const statusColors: Record<string, string> = {
       </div>
     </section>
 
+    <section>
+      <GitHubContributions username="rhyssullivan" />
+    </section>
+
     <section class="space-y-4">
-      {feed.map((item) => {
-        if (item.type === 'blog') {
-          return (
-            <a href={`/blog/${item.data.slug}`} class="group block p-4 -mx-4 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="text-xs text-[var(--text-muted)]">blog</span>
-                <span class="text-xs text-[var(--text-muted)]">·</span>
-                <span class="text-xs text-[var(--text-muted)]">
-                  {item.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </span>
-              </div>
-              <h3 class="font-medium group-hover:text-[var(--accent)] transition-colors">{item.data.data.title}</h3>
-              <p class="text-sm text-[var(--text-muted)] mt-1">{item.data.data.description}</p>
-            </a>
-          );
-        }
-        
-        if (item.type === 'idea') {
-          return (
-            <a href={`/ideas/${item.data.slug}`} class="group block p-4 -mx-4 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="text-xs text-[var(--text-muted)]">idea</span>
-                <span class="text-xs text-[var(--text-muted)]">·</span>
-                <span class="text-xs text-[var(--text-muted)]">
-                  {item.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </span>
-                <span class={`text-xs px-2 py-0.5 rounded-full ${statusColors[item.data.data.status]}`}>
-                  {item.data.data.status}
-                </span>
-              </div>
-              <h3 class="font-medium group-hover:text-[var(--accent)] transition-colors">{item.data.data.title}</h3>
-              <p class="text-sm text-[var(--text-muted)] mt-1">{item.data.data.description}</p>
-            </a>
-          );
-        }
-        
-        if (item.type === 'photo') {
-          return (
-            <a href={`/photos/${item.data.slug}`} class="group block p-4 -mx-4 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="text-xs text-[var(--text-muted)]">space</span>
-                <span class="text-xs text-[var(--text-muted)]">·</span>
-                <span class="text-xs text-[var(--text-muted)]">
-                  {item.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </span>
-              </div>
-              <div class="overflow-hidden rounded-lg max-w-sm">
-                <CroppedImage
-                  src={item.data.data.image}
-                  alt={item.data.data.alt}
-                  cropArea={item.data.data.cropArea}
-                  class="w-full"
-                />
-              </div>
-              <h3 class="font-medium mt-2 group-hover:text-[var(--accent)] transition-colors">{item.data.data.title}</h3>
-            </a>
-          );
-        }
-      })}
+      {
+        feed.map((item) => {
+          if (item.type === "blog") {
+            return (
+              <a
+                href={`/blog/${item.data.slug}`}
+                class="group block p-4 -mx-4 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
+              >
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-xs text-[var(--text-muted)]">blog</span>
+                  <span class="text-xs text-[var(--text-muted)]">·</span>
+                  <span class="text-xs text-[var(--text-muted)]">
+                    {item.date.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </span>
+                </div>
+                <h3 class="font-medium group-hover:text-[var(--accent)] transition-colors">
+                  {item.data.data.title}
+                </h3>
+                <p class="text-sm text-[var(--text-muted)] mt-1">
+                  {item.data.data.description}
+                </p>
+              </a>
+            );
+          }
+
+          if (item.type === "idea") {
+            return (
+              <a
+                href={`/ideas/${item.data.slug}`}
+                class="group block p-4 -mx-4 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
+              >
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-xs text-[var(--text-muted)]">idea</span>
+                  <span class="text-xs text-[var(--text-muted)]">·</span>
+                  <span class="text-xs text-[var(--text-muted)]">
+                    {item.date.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </span>
+                  <span
+                    class={`text-xs px-2 py-0.5 rounded-full ${statusColors[item.data.data.status]}`}
+                  >
+                    {item.data.data.status}
+                  </span>
+                </div>
+                <h3 class="font-medium group-hover:text-[var(--accent)] transition-colors">
+                  {item.data.data.title}
+                </h3>
+                <p class="text-sm text-[var(--text-muted)] mt-1">
+                  {item.data.data.description}
+                </p>
+              </a>
+            );
+          }
+
+          if (item.type === "photo") {
+            return (
+              <a
+                href={`/photos/${item.data.slug}`}
+                class="group block p-4 -mx-4 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
+              >
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-xs text-[var(--text-muted)]">space</span>
+                  <span class="text-xs text-[var(--text-muted)]">·</span>
+                  <span class="text-xs text-[var(--text-muted)]">
+                    {item.date.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </span>
+                </div>
+                <div class="overflow-hidden rounded-lg max-w-sm">
+                  <CroppedImage
+                    src={item.data.data.image}
+                    alt={item.data.data.alt}
+                    cropArea={item.data.data.cropArea}
+                    class="w-full"
+                  />
+                </div>
+                <h3 class="font-medium mt-2 group-hover:text-[var(--accent)] transition-colors">
+                  {item.data.data.title}
+                </h3>
+              </a>
+            );
+          }
+        })
+      }
     </section>
   </div>
 </Base>

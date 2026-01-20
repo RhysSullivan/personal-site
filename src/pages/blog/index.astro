@@ -1,41 +1,48 @@
 ---
-import Base from '../../layouts/Base.astro';
-import { getCollection } from 'astro:content';
+import Base from "../../layouts/Base.astro";
+import { getCollection } from "astro:content";
 
-const posts = (await getCollection('blog'))
+const posts = (await getCollection("blog"))
   .filter((post) => !post.data.draft)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 ---
 
-<Base title="Blog - Rhys Sullivan" description="Writing about software, ideas, and whatever else.">
+<Base
+  title="Blog - Rhys Sullivan"
+  description="Writing about software, ideas, and whatever else."
+>
   <div>
     <h1 class="text-2xl font-semibold tracking-tight mb-2">blog</h1>
-    <p class="text-[var(--text-muted)] mb-8">
-      thoughts, learnings, and half-baked opinions
-    </p>
+    <p class="text-[var(--text-muted)] mb-8"></p>
 
-    {posts.length === 0 ? (
-      <p class="text-[var(--text-muted)]">nothing here yet</p>
-    ) : (
-      <ul class="space-y-6">
-        {posts.map((post) => (
-          <li>
-            <a href={`/blog/${post.slug}`} class="group block">
-              <div class="flex items-baseline justify-between gap-4 mb-1">
-                <h2 class="font-medium text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors">
-                  {post.data.title}
-                </h2>
-                <time class="text-sm text-[var(--text-muted)] shrink-0">
-                  {post.data.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </time>
-              </div>
-              <p class="text-sm text-[var(--text-muted)]">
-                {post.data.description}
-              </p>
-            </a>
-          </li>
-        ))}
-      </ul>
-    )}
+    {
+      posts.length === 0 ? (
+        <p class="text-[var(--text-muted)]">nothing here yet</p>
+      ) : (
+        <ul class="space-y-6">
+          {posts.map((post) => (
+            <li>
+              <a href={`/blog/${post.slug}`} class="group block">
+                <div class="flex items-baseline justify-between gap-4 mb-1">
+                  <h2 class="font-medium text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors">
+                    {post.data.title}
+                  </h2>
+                  <time class="text-sm text-[var(--text-muted)] shrink-0">
+                    {post.data.date.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </time>
+                </div>
+                <p class="text-sm text-[var(--text-muted)]">
+                  {post.data.description}
+                </p>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
   </div>
 </Base>

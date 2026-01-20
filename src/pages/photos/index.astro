@@ -5,6 +5,13 @@ import { getCollection } from 'astro:content';
 
 const photos = (await getCollection('photos'))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+function getAspectRatio(photo: typeof photos[0]) {
+  const [_x, _y, w, h] = photo.data.cropArea.split(' ').map(v => parseFloat(v));
+  return (w * photo.data.image.width) / (h * photo.data.image.height);
+}
+
+const aspectRatios = photos.map(p => getAspectRatio(p));
 ---
 
 <Base title="Photos - Rhys Sullivan" description="Astrophotography and space photos." wide>
@@ -17,11 +24,12 @@ const photos = (await getCollection('photos'))
     {photos.length === 0 ? (
       <p class="text-[var(--text-muted)]">photos coming soon</p>
     ) : (
-      <div class="grid grid-cols-2 lg:grid-cols-3 gap-4" id="photo-grid">
-        {photos.map((photo) => (
+      <div class="relative" id="photo-grid" data-aspects={JSON.stringify(aspectRatios)}>
+        {photos.map((photo, i) => (
           <a
             href={`/photos/${photo.slug}`}
             class="group block"
+            data-index={i}
           >
             <figure>
               <div class="relative overflow-hidden rounded-lg bg-[var(--bg-secondary)]">
@@ -45,12 +53,13 @@ const photos = (await getCollection('photos'))
     )}
   </div>
   
-  <script>
-    function initMasonry() {
+  <script is:inline>
+    (function() {
       const grid = document.getElementById('photo-grid');
       if (!grid) return;
       
-      const items = Array.from(grid.children) as HTMLElement[];
+      const aspects = JSON.parse(grid.dataset.aspects || '[]');
+      const items = Array.from(grid.children);
       const gap = 16;
       
       function layout() {
@@ -59,26 +68,26 @@ const photos = (await getCollection('photos'))
         const colWidth = (gridWidth - gap * (cols - 1)) / cols;
         const colHeights = new Array(cols).fill(0);
         
-        items.forEach((item) => {
+        items.forEach((item, i) => {
           const shortestCol = colHeights.indexOf(Math.min(...colHeights));
+          const height = colWidth / aspects[i];
           
           item.style.position = 'absolute';
-          item.style.width = `${colWidth}px`;
-          item.style.left = `${shortestCol * (colWidth + gap)}px`;
-          item.style.top = `${colHeights[shortestCol]}px`;
+          item.style.width = colWidth + 'px';
+          item.style.left = (shortestCol * (colWidth + gap)) + 'px';
+          item.style.top = colHeights[shortestCol] + 'px';
           
-          colHeights[shortestCol] += item.offsetHeight + gap;
+          colHeights[shortestCol] += height + gap;
         });
         
-        grid.style.position = 'relative';
-        grid.style.height = `${Math.max(...colHeights)}px`;
+        grid.style.height = Math.max(...colHeights) + 'px';
       }
       
       layout();
       window.addEventListener('resize', layout);
-    }
-    
-    initMasonry();
-    document.addEventListener('astro:after-swap', initMasonry);
+      document.addEventListener('astro:after-swap', function() {
+        setTimeout(layout, 0);
+      });
+    })();
   </script>
 </Base>
