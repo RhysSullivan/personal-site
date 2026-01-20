@@ -25,10 +25,5 @@ const statusColors: Record<string, string> = {
 ---
 
 <Post title={idea.data.title} description={idea.data.description} date={idea.data.date}>
-  <div class="mb-6">
-    <span class={`text-xs px-2 py-1 rounded-full ${statusColors[idea.data.status]}`}>
-      {idea.data.status}
-    </span>
-  </div>
   <Content />
 </Post>

@@ -34,14 +34,7 @@ const statusColors: Record<string, string> = {
                 href={`/ideas/${idea.slug}`}
                 class="group block p-4 -mx-4 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
               >
-                <div class="flex items-center gap-3 mb-2">
-                  <h2 class="font-medium">{idea.data.title}</h2>
-                  <span
-                    class={`text-xs px-2 py-0.5 rounded-full ${statusColors[idea.data.status]}`}
-                  >
-                    {idea.data.status}
-                  </span>
-                </div>
+                <h2 class="font-medium mb-2">{idea.data.title}</h2>
                 <p class="text-sm text-[var(--text-muted)]">
                   {idea.data.description}
                 </p>

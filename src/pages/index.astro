@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import CroppedImage from "../components/CroppedImage.astro";
 import GitHubContributions from "../components/GitHubContributions.astro";
+import YearsLeft from "../components/YearsLeft.astro";
 import { getCollection } from "astro:content";
 
 const posts = (await getCollection("blog"))
@@ -91,6 +92,10 @@ const statusColors: Record<string, string> = {
     </section>
 
     <section>
+      <YearsLeft />
+    </section>
+
+    <section>
       {
         groupedByDay.map((group, groupIndex) => {
           const prevGroup = groupedByDay[groupIndex - 1];
@@ -146,11 +151,6 @@ const statusColors: Record<string, string> = {
                           </span>
                           <span class="font-medium group-hover:text-[var(--accent)] transition-colors">
                             {item.data.data.title}
-                          </span>
-                          <span
-                            class={`text-xs px-2 py-0.5 rounded-full shrink-0 ${statusColors[item.data.data.status]}`}
-                          >
-                            {item.data.data.status}
                           </span>
                         </a>
                       );

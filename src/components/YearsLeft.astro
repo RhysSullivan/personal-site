@@ -1,0 +1,27 @@
+---
+const birthDate = new Date("2001-04-27");
+const lifeExpectancy = 85;
+const now = new Date();
+
+const ageInMs = now.getTime() - birthDate.getTime();
+const ageInMonths = Math.floor(ageInMs / (1000 * 60 * 60 * 24 * 30.44));
+const totalMonths = lifeExpectancy * 12;
+const monthsLeft = totalMonths - ageInMonths;
+---
+
+<div class="months-left">
+  <div class="flex items-center gap-2 mb-2">
+    <span class="text-sm text-[var(--text-muted)]">
+      life completed {ageInMonths}/{totalMonths} months ({Math.round((ageInMonths / totalMonths) * 100)}%)
+    </span>
+  </div>
+  <div class="flex flex-wrap gap-[2px]">
+    {
+      Array.from({ length: totalMonths }).map((_, i) => (
+        <div
+          class={`w-[6px] h-[6px] rounded-sm ${i < ageInMonths ? "bg-[var(--accent)]" : "bg-[#161b22]"}`}
+        />
+      ))
+    }
+  </div>
+</div>
