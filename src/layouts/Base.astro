@@ -40,15 +40,40 @@ const { title, description = 'Rhys Sullivan', wide = false } = Astro.props;
       setTheme();
       document.addEventListener('astro:after-swap', setTheme);
       
-      if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-      }
+      const historyStack = [{ path: window.location.pathname, scroll: 0 }];
       
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && window.history.length > 1) {
-          window.history.back();
+      document.addEventListener('astro:before-swap', () => {
+        if (historyStack.length > 0) {
+          historyStack[historyStack.length - 1].scroll = window.scrollY;
         }
       });
+      
+      document.addEventListener('astro:after-swap', () => {
+        const current = window.location.pathname;
+        if (historyStack[historyStack.length - 1]?.path !== current) {
+          historyStack.push({ path: current, scroll: 0 });
+        }
+      });
+      
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && historyStack.length > 1) {
+          historyStack.pop();
+          const prev = historyStack[historyStack.length - 1];
+          if (prev) {
+            sessionStorage.setItem('restoreScroll', String(prev.scroll));
+            window.location.replace(prev.path);
+          }
+        }
+      });
+      
+      window.addEventListener('popstate', (e) => {
+        e.stopImmediatePropagation();
+        const scroll = historyStack.length > 1 ? historyStack[historyStack.length - 2]?.scroll : 0;
+        historyStack.pop();
+        sessionStorage.setItem('restoreScroll', String(scroll || 0));
+        window.location.reload();
+      });
+      
     </script>
   </head>
   <body>
@@ -58,5 +83,21 @@ const { title, description = 'Rhys Sullivan', wide = false } = Astro.props;
         <slot />
       </main>
     </div>
+    <script is:inline>
+      (function() {
+        const restoreScroll = sessionStorage.getItem('restoreScroll');
+        if (restoreScroll) {
+          const scrollY = parseInt(restoreScroll);
+          sessionStorage.removeItem('restoreScroll');
+          document.documentElement.style.opacity = '0';
+          document.documentElement.style.scrollBehavior = 'auto';
+          window.scrollTo(0, scrollY);
+          document.documentElement.style.scrollBehavior = '';
+          requestAnimationFrame(() => {
+            document.documentElement.style.opacity = '1';
+          });
+        }
+      })();
+    </script>
   </body>
 </html>

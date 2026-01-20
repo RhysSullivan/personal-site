@@ -1,118 +1,84 @@
 ---
-import { ViewTransitions } from 'astro:transitions';
-import Nav from '../../components/Nav.astro';
+import Base from '../../layouts/Base.astro';
 import CroppedImage from '../../components/CroppedImage.astro';
-import '../../styles/global.css';
 import { getCollection } from 'astro:content';
 
 const photos = (await getCollection('photos'))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="description" content="Astrophotography and space photos." />
-    <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap"
-      rel="stylesheet"
-    />
-    <title>Photos - Rhys Sullivan</title>
-    <ViewTransitions />
-    <script is:inline>
-      function setTheme() {
-        const theme = localStorage.getItem('theme') ?? 
-          (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        if (theme === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      }
-      setTheme();
-      document.addEventListener('astro:after-swap', setTheme);
-    </script>
-  </head>
-  <body>
-    <div class="min-h-screen px-6 mx-auto max-w-[1600px]">
-      <Nav />
-      <div>
-        <h1 class="text-2xl font-semibold tracking-tight mb-2">space photos</h1>
-        <p class="text-[var(--text-muted)] mb-8">
-          captured inside san francisco from my patio
-        </p>
+<Base title="Photos - Rhys Sullivan" description="Astrophotography and space photos." wide>
+  <div>
+    <h1 class="text-2xl font-semibold tracking-tight mb-2">space photos</h1>
+    <p class="text-[var(--text-muted)] mb-8">
+      captured inside san francisco from my patio
+    </p>
 
-        {photos.length === 0 ? (
-          <p class="text-[var(--text-muted)]">photos coming soon</p>
-        ) : (
-          <div class="grid grid-cols-2 lg:grid-cols-3 gap-4" id="photo-grid">
-            {photos.map((photo) => (
-              <a
-                href={`/photos/${photo.slug}`}
-                class="group block"
-              >
-                <figure>
-                  <div class="relative overflow-hidden rounded-lg bg-[var(--bg-secondary)]">
-                    <CroppedImage
-                      src={photo.data.image}
-                      alt={photo.data.alt}
-                      cropArea={photo.data.cropArea}
-                      class="w-full"
-                    />
-                    <figcaption class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 to-transparent z-10">
-                      <h3 class="font-medium text-sm text-white">{photo.data.title}</h3>
-                      <span class="text-xs text-white/70">
-                        {photo.data.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </span>
-                    </figcaption>
-                  </div>
-                </figure>
-              </a>
-            ))}
-          </div>
-        )}
+    {photos.length === 0 ? (
+      <p class="text-[var(--text-muted)]">photos coming soon</p>
+    ) : (
+      <div class="grid grid-cols-2 lg:grid-cols-3 gap-4" id="photo-grid">
+        {photos.map((photo) => (
+          <a
+            href={`/photos/${photo.slug}`}
+            class="group block"
+          >
+            <figure>
+              <div class="relative overflow-hidden rounded-lg bg-[var(--bg-secondary)]">
+                <CroppedImage
+                  src={photo.data.image}
+                  alt={photo.data.alt}
+                  cropArea={photo.data.cropArea}
+                  class="w-full"
+                />
+                <figcaption class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 to-transparent z-10">
+                  <h3 class="font-medium text-sm text-white">{photo.data.title}</h3>
+                  <span class="text-xs text-white/70">
+                    {photo.data.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </span>
+                </figcaption>
+              </div>
+            </figure>
+          </a>
+        ))}
       </div>
-    </div>
-    
-    <script>
-      function initMasonry() {
-        const grid = document.getElementById('photo-grid');
-        if (!grid) return;
+    )}
+  </div>
+  
+  <script>
+    function initMasonry() {
+      const grid = document.getElementById('photo-grid');
+      if (!grid) return;
+      
+      const items = Array.from(grid.children) as HTMLElement[];
+      const gap = 16;
+      
+      function layout() {
+        const gridWidth = grid.offsetWidth;
+        const cols = window.innerWidth >= 1024 ? 3 : 2;
+        const colWidth = (gridWidth - gap * (cols - 1)) / cols;
+        const colHeights = new Array(cols).fill(0);
         
-        const items = Array.from(grid.children) as HTMLElement[];
-        const gap = 16;
-        
-        function layout() {
-          const gridWidth = grid.offsetWidth;
-          const cols = window.innerWidth >= 1024 ? 3 : 2;
-          const colWidth = (gridWidth - gap * (cols - 1)) / cols;
-          const colHeights = new Array(cols).fill(0);
+        items.forEach((item) => {
+          const shortestCol = colHeights.indexOf(Math.min(...colHeights));
           
-          items.forEach((item) => {
-            const shortestCol = colHeights.indexOf(Math.min(...colHeights));
-            
-            item.style.position = 'absolute';
-            item.style.width = `${colWidth}px`;
-            item.style.left = `${shortestCol * (colWidth + gap)}px`;
-            item.style.top = `${colHeights[shortestCol]}px`;
-            
-            colHeights[shortestCol] += item.offsetHeight + gap;
-          });
+          item.style.position = 'absolute';
+          item.style.width = `${colWidth}px`;
+          item.style.left = `${shortestCol * (colWidth + gap)}px`;
+          item.style.top = `${colHeights[shortestCol]}px`;
           
-          grid.style.position = 'relative';
-          grid.style.height = `${Math.max(...colHeights)}px`;
-        }
+          colHeights[shortestCol] += item.offsetHeight + gap;
+        });
         
-        layout();
-        window.addEventListener('resize', layout);
+        grid.style.position = 'relative';
+        grid.style.height = `${Math.max(...colHeights)}px`;
       }
       
-      initMasonry();
-      document.addEventListener('astro:after-swap', initMasonry);
-    </script>
-  </body>
-</html>
+      layout();
+      window.addEventListener('resize', layout);
+    }
+    
+    initMasonry();
+    document.addEventListener('astro:after-swap', initMasonry);
+  </script>
+</Base>
