@@ -28,7 +28,7 @@ const projects = (await getCollection("projects")).map((project) => ({
 }));
 
 const feed = [...posts, ...ideas, ...photos, ...projects].sort(
-  (a, b) => b.date.valueOf() - a.date.valueOf()
+  (a, b) => b.date.valueOf() - a.date.valueOf(),
 );
 
 // Group by day with year tracking
@@ -67,7 +67,7 @@ const statusColors: Record<string, string> = {
     <section>
       <h1 class="text-2xl font-semibold tracking-tight mb-4">Rhys Sullivan</h1>
       <p class="text-[var(--text-muted)] leading-relaxed">
-        Software engineer. Currently at Vercel.
+        Software engineer. Currently at Vercel. On a bit of a space kick.
       </p>
       <div class="flex gap-4 mt-4">
         <a
@@ -84,7 +84,6 @@ const statusColors: Record<string, string> = {
         >
           twitter
         </a>
-
       </div>
     </section>
 
