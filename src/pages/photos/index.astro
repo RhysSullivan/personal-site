@@ -1,7 +1,7 @@
 ---
-import { Image } from 'astro:assets';
 import { ViewTransitions } from 'astro:transitions';
 import Nav from '../../components/Nav.astro';
+import CroppedImage from '../../components/CroppedImage.astro';
 import '../../styles/global.css';
 import { getCollection } from 'astro:content';
 
@@ -49,25 +49,21 @@ const photos = (await getCollection('photos'))
         {photos.length === 0 ? (
           <p class="text-[var(--text-muted)]">photos coming soon</p>
         ) : (
-          <div class="grid grid-cols-2 lg:grid-cols-3 auto-rows-[300px] gap-3">
+          <div class="columns-1 sm:columns-2 lg:columns-3 gap-4">
             {photos.map((photo) => (
               <a
                 href={`/photos/${photo.slug}`}
-                class:list={[
-                  'group block',
-                  photo.data.featured && 'row-span-2',
-                ]}
+                class="group block mb-4 break-inside-avoid"
               >
-                <figure class="h-full">
-                  <div class="relative overflow-hidden rounded-lg bg-[var(--bg-secondary)] h-full">
-                    <Image
+                <figure>
+                  <div class="relative overflow-hidden rounded-lg bg-[var(--bg-secondary)]">
+                    <CroppedImage
                       src={photo.data.image}
                       alt={photo.data.alt}
-                      class="w-full h-full object-cover absolute inset-0"
-                      widths={[400, 800, 1200]}
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 400px"
+                      cropArea={photo.data.cropArea}
+                      class="w-full"
                     />
-                    <figcaption class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
+                    <figcaption class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 to-transparent z-10">
                       <h3 class="font-medium text-sm text-white">{photo.data.title}</h3>
                       <span class="text-xs text-white/70">
                         {photo.data.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

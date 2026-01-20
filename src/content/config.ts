@@ -28,6 +28,7 @@ const photos = defineCollection({
     alt: z.string(),
     date: z.coerce.date(),
     featured: z.boolean().default(false),
+    cropArea: z.string().default("0% 0% 100% 100%"),
   }),
 });
 

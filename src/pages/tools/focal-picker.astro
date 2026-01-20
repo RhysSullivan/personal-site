@@ -1,0 +1,241 @@
+---
+import { getCollection } from 'astro:content';
+
+const photos = await getCollection('photos');
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Crop Area Picker</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: system-ui; background: #111; color: #fff; padding: 2rem; }
+      h1 { margin-bottom: 1rem; }
+      .photos { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
+      .photo-btn { 
+        padding: 0.5rem 1rem; 
+        background: #333; 
+        border: none; 
+        color: #fff; 
+        cursor: pointer; 
+        border-radius: 4px;
+      }
+      .photo-btn:hover { background: #555; }
+      .photo-btn.active { background: #6366f1; }
+      .editor { display: flex; gap: 2rem; flex-wrap: wrap; align-items: flex-start; }
+      .image-container { 
+        position: relative; 
+        cursor: crosshair;
+        max-width: 100%;
+        user-select: none;
+      }
+      .image-container img { 
+        max-width: 800px; 
+        max-height: 600px; 
+        display: block;
+      }
+      .crop-box {
+        position: absolute;
+        border: 2px solid #6366f1;
+        background: rgba(99, 102, 241, 0.2);
+        pointer-events: none;
+      }
+      .preview-section h3 { margin-bottom: 0.5rem; }
+      .preview {
+        max-width: 400px;
+        max-height: 400px;
+        overflow: hidden;
+        border-radius: 8px;
+        background: #000;
+      }
+      .preview img {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .output {
+        margin-top: 2rem;
+        padding: 1rem;
+        background: #222;
+        border-radius: 8px;
+        font-family: monospace;
+      }
+      .output code {
+        color: #6366f1;
+        user-select: all;
+        display: block;
+        margin-top: 0.5rem;
+      }
+      .instructions {
+        color: #888;
+        margin-bottom: 2rem;
+      }
+      .reset-btn {
+        margin-top: 1rem;
+        padding: 0.5rem 1rem;
+        background: #333;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      .reset-btn:hover { background: #555; }
+      .dimensions {
+        margin-top: 0.5rem;
+        color: #888;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Crop Area Picker</h1>
+    <p class="instructions">Click and drag to draw a crop rectangle. The preview shows the actual cropped result.</p>
+    
+    <div class="photos">
+      {photos.map((photo, i) => (
+        <button class:list={["photo-btn", i === 0 && "active"]} data-slug={photo.slug} data-src={photo.data.image.src}>
+          {photo.data.title}
+        </button>
+      ))}
+    </div>
+
+    <div class="editor">
+      <div>
+        <div class="image-container" id="imageContainer">
+          <img id="mainImage" src="" alt="Select a photo" draggable="false" />
+          <div class="crop-box" id="cropBox" style="display: none;"></div>
+        </div>
+        <button class="reset-btn" id="resetBtn">Reset to full image</button>
+      </div>
+      
+      <div class="preview-section">
+        <h3>Preview (cropped result)</h3>
+        <div class="preview" id="preview">
+          <canvas id="previewCanvas"></canvas>
+        </div>
+        <p class="dimensions" id="dimensions">Full image</p>
+      </div>
+    </div>
+
+    <div class="output">
+      <p>Add this to your MDX frontmatter:</p>
+      <code id="outputCode">cropArea: "0% 0% 100% 100%"</code>
+    </div>
+
+    <script>
+      const buttons = document.querySelectorAll('.photo-btn');
+      const mainImage = document.getElementById('mainImage') as HTMLImageElement;
+      const cropBox = document.getElementById('cropBox') as HTMLDivElement;
+      const imageContainer = document.getElementById('imageContainer') as HTMLDivElement;
+      const outputCode = document.getElementById('outputCode') as HTMLElement;
+      const resetBtn = document.getElementById('resetBtn') as HTMLButtonElement;
+      const previewCanvas = document.getElementById('previewCanvas') as HTMLCanvasElement;
+      const dimensions = document.getElementById('dimensions') as HTMLParagraphElement;
+      const ctx = previewCanvas.getContext('2d')!;
+      
+      let isDrawing = false;
+      let startX = 0, startY = 0;
+      let cropX = 0, cropY = 0, cropW = 100, cropH = 100;
+      let imgWidth = 0, imgHeight = 0;
+
+      function loadImage(src: string) {
+        mainImage.src = src;
+        mainImage.onload = () => {
+          imgWidth = mainImage.naturalWidth;
+          imgHeight = mainImage.naturalHeight;
+          cropX = 0; cropY = 0; cropW = 100; cropH = 100;
+          cropBox.style.display = 'none';
+          updatePreview();
+        };
+      }
+
+      function updatePreview() {
+        const sx = (cropX / 100) * imgWidth;
+        const sy = (cropY / 100) * imgHeight;
+        const sw = (cropW / 100) * imgWidth;
+        const sh = (cropH / 100) * imgHeight;
+        
+        const maxSize = 400;
+        let canvasW, canvasH;
+        if (sw > sh) {
+          canvasW = Math.min(sw, maxSize);
+          canvasH = (sh / sw) * canvasW;
+        } else {
+          canvasH = Math.min(sh, maxSize);
+          canvasW = (sw / sh) * canvasH;
+        }
+        
+        previewCanvas.width = canvasW;
+        previewCanvas.height = canvasH;
+        previewCanvas.style.width = canvasW + 'px';
+        previewCanvas.style.height = canvasH + 'px';
+        
+        ctx.drawImage(mainImage, sx, sy, sw, sh, 0, 0, canvasW, canvasH);
+        
+        dimensions.textContent = `${Math.round(sw)} × ${Math.round(sh)} px`;
+        outputCode.textContent = `cropArea: "${Math.round(cropX)}% ${Math.round(cropY)}% ${Math.round(cropW)}% ${Math.round(cropH)}%"`;
+      }
+
+      function updateCropBox() {
+        cropBox.style.left = `${cropX}%`;
+        cropBox.style.top = `${cropY}%`;
+        cropBox.style.width = `${cropW}%`;
+        cropBox.style.height = `${cropH}%`;
+      }
+
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          buttons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          loadImage(btn.getAttribute('data-src') || '');
+        });
+      });
+
+      imageContainer.addEventListener('mousedown', (e) => {
+        if (e.target !== mainImage) return;
+        isDrawing = true;
+        const rect = mainImage.getBoundingClientRect();
+        startX = ((e.clientX - rect.left) / rect.width) * 100;
+        startY = ((e.clientY - rect.top) / rect.height) * 100;
+        cropBox.style.display = 'block';
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isDrawing) return;
+        const rect = mainImage.getBoundingClientRect();
+        const currentX = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+        const currentY = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+        
+        cropX = Math.min(startX, currentX);
+        cropY = Math.min(startY, currentY);
+        cropW = Math.abs(currentX - startX);
+        cropH = Math.abs(currentY - startY);
+        
+        updateCropBox();
+        updatePreview();
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isDrawing && cropW < 5 && cropH < 5) {
+          cropX = 0; cropY = 0; cropW = 100; cropH = 100;
+          cropBox.style.display = 'none';
+          updatePreview();
+        }
+        isDrawing = false;
+      });
+
+      resetBtn.addEventListener('click', () => {
+        cropX = 0; cropY = 0; cropW = 100; cropH = 100;
+        cropBox.style.display = 'none';
+        updatePreview();
+      });
+
+      const firstBtn = buttons[0] as HTMLButtonElement;
+      if (firstBtn) {
+        loadImage(firstBtn.getAttribute('data-src') || '');
+      }
+    </script>
+  </body>
+</html>

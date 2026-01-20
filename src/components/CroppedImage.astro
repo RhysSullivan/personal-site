@@ -1,0 +1,36 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  cropArea: string;
+  class?: string;
+}
+
+const { src, alt, cropArea, class: className } = Astro.props;
+
+const [x, y, w, h] = cropArea.split(' ').map(v => parseFloat(v));
+
+const scaleX = 100 / w;
+const scaleY = 100 / h;
+const offsetX = -x * scaleX;
+const offsetY = -y * scaleY;
+
+const aspectRatio = (w * src.width) / (h * src.height);
+---
+
+<div 
+  class:list={["overflow-hidden relative", className]}
+  style={`aspect-ratio: ${aspectRatio};`}
+>
+  <Image
+    src={src}
+    alt={alt}
+    class="absolute w-full h-full"
+    style={`width: ${scaleX * 100}% !important; height: ${scaleY * 100}% !important; left: ${offsetX}%; top: ${offsetY}%; max-width: none;`}
+    widths={[400, 800, 1200]}
+    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 500px"
+  />
+</div>
