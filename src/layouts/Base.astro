@@ -20,9 +20,9 @@ const pathname = Astro.url.pathname;
 // Skip background on /photos pages
 const showBg = !pathname.startsWith('/photos');
 
-// Deterministic "random" based on pathname - consistent per page, no duplicates needed
-const hash = pathname.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-const bgImage = showBg && photoList.length > 0 ? photoList[hash % photoList.length] : null;
+// Deterministic "random" based on pathname - consistent per page
+const hash = pathname.split('').reduce((acc, char, i) => acc + char.charCodeAt(0) * (i + 1) * 31, 0);
+const bgImage = showBg && photoList.length > 0 ? photoList[Math.abs(hash) % photoList.length] : null;
 
 const optimizedBg = bgImage ? await getImage({ src: bgImage, width: 1920, quality: 80 }) : null;
 const slug = ogSlug ?? (pathname.replace(/^\//, '').replace(/\/$/, '') || 'index');
