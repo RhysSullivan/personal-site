@@ -10,6 +10,8 @@ export async function GET(context: APIContext) {
     getCollection('projects'),
   ]);
 
+  const site = context.site ?? new URL('https://rhys.dev');
+
   const blogItems = blog
     .filter((post) => !post.data.draft)
     .map((post) => ({
@@ -19,12 +21,16 @@ export async function GET(context: APIContext) {
       link: `/blog/${post.slug}/`,
     }));
 
-  const photoItems = photos.map((photo) => ({
-    title: photo.data.title,
-    description: photo.data.alt,
-    pubDate: photo.data.date,
-    link: `/photos/${photo.slug}/`,
-  }));
+  const photoItems = photos.map((photo) => {
+    const imgSrc = new URL(photo.data.image.src, site).href;
+    return {
+      title: photo.data.title,
+      description: photo.data.alt,
+      pubDate: photo.data.date,
+      link: `/photos/${photo.slug}/`,
+      content: `<img src="${imgSrc}" alt="${photo.data.alt}" /><p>${photo.data.alt}</p>`,
+    };
+  });
 
   const ideaItems = ideas.map((idea) => ({
     title: idea.data.title,
@@ -46,7 +52,7 @@ export async function GET(context: APIContext) {
   return rss({
     title: 'Rhys Sullivan',
     description: 'Blog posts, space photos, ideas, and projects.',
-    site: context.site ?? 'https://rhys.dev',
+    site: site,
     items: allItems,
   });
 }
