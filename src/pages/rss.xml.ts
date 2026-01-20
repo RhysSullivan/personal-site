@@ -3,10 +3,11 @@ import { getCollection } from 'astro:content';
 import type { APIContext } from 'astro';
 
 export async function GET(context: APIContext) {
-  const [blog, photos, ideas] = await Promise.all([
+  const [blog, photos, ideas, projects] = await Promise.all([
     getCollection('blog'),
     getCollection('photos'),
     getCollection('ideas'),
+    getCollection('projects'),
   ]);
 
   const blogItems = blog
@@ -32,12 +33,19 @@ export async function GET(context: APIContext) {
     link: `/ideas/${idea.slug}/`,
   }));
 
-  const allItems = [...blogItems, ...photoItems, ...ideaItems]
+  const projectItems = projects.map((project) => ({
+    title: project.data.title,
+    description: project.data.description,
+    pubDate: project.data.date,
+    link: `/projects/${project.slug}/`,
+  }));
+
+  const allItems = [...blogItems, ...photoItems, ...ideaItems, ...projectItems]
     .sort((a, b) => b.pubDate.valueOf() - a.pubDate.valueOf());
 
   return rss({
     title: 'Rhys Sullivan',
-    description: 'Blog posts, space photos, and ideas.',
+    description: 'Blog posts, space photos, ideas, and projects.',
     site: context.site ?? 'https://rhys.dev',
     items: allItems,
   });
