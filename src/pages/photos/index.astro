@@ -64,6 +64,12 @@ const aspectRatios = photos.map(p => getAspectRatio(p));
       
       function layout() {
         const gridWidth = grid.offsetWidth;
+        // Guard: don't layout if grid has no width yet
+        if (gridWidth <= 0) {
+          requestAnimationFrame(layout);
+          return;
+        }
+        
         const cols = window.innerWidth >= 1024 ? 3 : 2;
         const colWidth = (gridWidth - gap * (cols - 1)) / cols;
         const colHeights = new Array(cols).fill(0);
@@ -83,10 +89,11 @@ const aspectRatios = photos.map(p => getAspectRatio(p));
         grid.style.height = Math.max(...colHeights) + 'px';
       }
       
-      layout();
+      // Use requestAnimationFrame to ensure DOM is painted
+      requestAnimationFrame(layout);
       window.addEventListener('resize', layout);
       document.addEventListener('astro:after-swap', function() {
-        setTimeout(layout, 0);
+        requestAnimationFrame(layout);
       });
     })();
   </script>

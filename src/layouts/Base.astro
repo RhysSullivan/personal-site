@@ -1,7 +1,11 @@
 ---
 import { ViewTransitions } from 'astro:transitions';
+import { getImage } from 'astro:assets';
 import Nav from '../components/Nav.astro';
 import '../styles/global.css';
+
+const spacePhotos = import.meta.glob<{ default: ImageMetadata }>('../assets/photos/space/*.png', { eager: true });
+const photoList = Object.values(spacePhotos).map(m => m.default);
 
 interface Props {
   title: string;
@@ -12,6 +16,15 @@ interface Props {
 
 const { title, description = 'Rhys Sullivan', wide = false, ogSlug } = Astro.props;
 const pathname = Astro.url.pathname;
+
+// Skip background on /photos pages
+const showBg = !pathname.startsWith('/photos');
+
+// Deterministic "random" based on pathname - consistent per page, no duplicates needed
+const hash = pathname.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+const bgImage = showBg && photoList.length > 0 ? photoList[hash % photoList.length] : null;
+
+const optimizedBg = bgImage ? await getImage({ src: bgImage, width: 1920, quality: 80 }) : null;
 const slug = ogSlug ?? (pathname.replace(/^\//, '').replace(/\/$/, '') || 'index');
 const ogImage = `/og/${slug}.png`;
 ---
@@ -97,6 +110,9 @@ const ogImage = `/og/${slug}.png`;
     </script>
   </head>
   <body>
+    {optimizedBg && (
+      <div class="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat opacity-[0.03] dark:opacity-[0.08]" style={`background-image: url('${optimizedBg.src}')`}></div>
+    )}
     <div class="px-6 mx-auto max-w-[750px]">
       <Nav />
     </div>

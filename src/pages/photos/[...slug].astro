@@ -5,15 +5,29 @@ import Base from '../../layouts/Base.astro';
 
 export async function getStaticPaths() {
   const photos = await getCollection('photos');
-  return photos.map((photo) => ({
+  const sortedPhotos = photos.sort((a, b) => {
+    const dateDiff = b.data.date.getTime() - a.data.date.getTime();
+    if (dateDiff !== 0) return dateDiff;
+    return a.slug.localeCompare(b.slug);
+  });
+  
+  return sortedPhotos.map((photo, index) => ({
     params: { slug: photo.slug },
-    props: photo,
+    props: {
+      photo,
+      prevPhoto: sortedPhotos[index + 1] || null,
+      nextPhoto: sortedPhotos[index - 1] || null,
+    },
   }));
 }
 
-type Props = CollectionEntry<'photos'>;
+interface Props {
+  photo: CollectionEntry<'photos'>;
+  prevPhoto: CollectionEntry<'photos'> | null;
+  nextPhoto: CollectionEntry<'photos'> | null;
+}
 
-const photo = Astro.props;
+const { photo, prevPhoto, nextPhoto } = Astro.props;
 const { Content } = await photo.render();
 
 const formattedDate = photo.data.date.toLocaleDateString('en-US', {
@@ -25,9 +39,28 @@ const formattedDate = photo.data.date.toLocaleDateString('en-US', {
 
 <Base title={`${photo.data.title} - Rhys Sullivan`} description={photo.data.alt} wide>
   <article>
-    <a href="/photos" class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-6 inline-block">
-      &larr; back to space
-    </a>
+    <nav class="flex justify-between items-center mb-4">
+      <a href="/photos" class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
+        &larr; back to space
+      </a>
+      <div class="flex gap-4 select-none">
+        {prevPhoto && (
+          <a href={`/photos/${prevPhoto.slug}`} class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
+            &larr; prev
+          </a>
+        )}
+        {nextPhoto && (
+          <a href={`/photos/${nextPhoto.slug}`} class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
+            next &rarr;
+          </a>
+        )}
+      </div>
+    </nav>
+
+    <header class="mb-4">
+      <h1 class="text-2xl font-semibold tracking-tight">{photo.data.title}</h1>
+      <time class="text-sm text-[var(--text-muted)]">{formattedDate}</time>
+    </header>
     
     <div class="mb-8 -mx-6 sm:mx-0 bg-black sm:rounded-lg overflow-hidden">
       <Image
@@ -40,13 +73,10 @@ const formattedDate = photo.data.date.toLocaleDateString('en-US', {
       />
     </div>
 
-    <header class="mb-6 max-w-2xl">
-      <h1 class="text-2xl font-semibold tracking-tight">{photo.data.title}</h1>
-      <time class="text-sm text-[var(--text-muted)]">{formattedDate}</time>
-    </header>
-
     <div class="prose max-w-2xl">
       <Content />
     </div>
+
+    
   </article>
 </Base>
