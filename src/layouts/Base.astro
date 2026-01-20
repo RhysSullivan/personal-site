@@ -111,7 +111,7 @@ const ogImage = `/og/${slug}.png`;
   </head>
   <body>
     {optimizedBg && (
-      <div id="parallax-bg" class="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat opacity-[0.03] dark:opacity-[0.08]" style={`background-image: url('${optimizedBg.src}')`}></div>
+      <div class="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat opacity-[0.03] dark:opacity-[0.08] rotate-90 sm:rotate-0 scale-[1.8] sm:scale-100 origin-center" style={`background-image: url('${optimizedBg.src}')`}></div>
     )}
     <div class="px-6 mx-auto max-w-[750px]">
       <Nav />
