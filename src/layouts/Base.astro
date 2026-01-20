@@ -85,8 +85,10 @@ const { title, description = 'Rhys Sullivan', wide = false } = Astro.props;
     </script>
   </head>
   <body>
-    <div class:list={['min-h-screen px-6 mx-auto', wide ? 'max-w-[1600px]' : 'max-w-2xl']}>
+    <div class="px-6 mx-auto max-w-2xl">
       <Nav />
+    </div>
+    <div class:list={['min-h-screen px-6 mx-auto', wide ? 'max-w-[1600px]' : 'max-w-2xl']}>
       <main class="pb-16">
         <slot />
       </main>
