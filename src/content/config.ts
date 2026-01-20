@@ -22,9 +22,9 @@ const ideas = defineCollection({
 
 const photos = defineCollection({
   type: 'content',
-  schema: z.object({
+  schema: ({ image }) => z.object({
     title: z.string(),
-    src: z.string(),
+    image: image(),
     alt: z.string(),
     date: z.coerce.date(),
     featured: z.boolean().default(false),

@@ -1,6 +1,9 @@
 ---
+import { Image } from 'astro:assets';
+import { ViewTransitions } from 'astro:transitions';
 import { getCollection, type CollectionEntry } from 'astro:content';
-import Base from '../../layouts/Base.astro';
+import Nav from '../../components/Nav.astro';
+import '../../styles/global.css';
 
 export async function getStaticPaths() {
   const photos = await getCollection('photos');
@@ -22,27 +25,71 @@ const formattedDate = photo.data.date.toLocaleDateString('en-US', {
 });
 ---
 
-<Base title={`${photo.data.title} - Rhys Sullivan`} description={photo.data.alt} wide>
-  <article>
-    <a href="/photos" class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-6 inline-block">
-      &larr; back to space
-    </a>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={photo.data.alt} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap"
+      rel="stylesheet"
+    />
+    <title>{photo.data.title} - Rhys Sullivan</title>
+    <ViewTransitions />
+    <script is:inline>
+      function setTheme() {
+        const theme = localStorage.getItem('theme') ?? 
+          (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+      setTheme();
+      document.addEventListener('astro:after-swap', setTheme);
+    </script>
+  </head>
+  <body>
+    <div class="min-h-screen px-6 mx-auto max-w-[1600px]">
+      <Nav />
+      <main class="pb-16">
+        <article>
+          <a href="/photos" class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-6 inline-block">
+            &larr; back to space
+          </a>
+          
+          <div class="mb-8 -mx-6 sm:mx-0 bg-black sm:rounded-lg overflow-hidden">
+            <Image
+              src={photo.data.image}
+              alt={photo.data.alt}
+              class="w-full max-h-[80vh] object-contain"
+              widths={[800, 1600, 2400]}
+              sizes="100vw"
+            />
+          </div>
+
+          <header class="mb-6 max-w-2xl">
+            <h1 class="text-2xl font-semibold tracking-tight">{photo.data.title}</h1>
+            <time class="text-sm text-[var(--text-muted)]">{formattedDate}</time>
+          </header>
+
+          <div class="prose max-w-2xl">
+            <Content />
+          </div>
+        </article>
+      </main>
+    </div>
     
-    <div class="mb-8 -mx-6 sm:mx-0">
-      <img
-        src={photo.data.src}
-        alt={photo.data.alt}
-        class="w-full sm:rounded-lg max-h-[80vh] object-contain bg-black"
-      />
-    </div>
-
-    <header class="mb-6 max-w-2xl">
-      <h1 class="text-2xl font-semibold tracking-tight">{photo.data.title}</h1>
-      <time class="text-sm text-[var(--text-muted)]">{formattedDate}</time>
-    </header>
-
-    <div class="prose max-w-2xl">
-      <Content />
-    </div>
-  </article>
-</Base>
+    <script>
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          window.location.href = '/photos';
+        }
+      });
+    </script>
+  </body>
+</html>

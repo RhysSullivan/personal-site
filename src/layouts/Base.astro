@@ -1,4 +1,5 @@
 ---
+import { ViewTransitions } from 'astro:transitions';
 import Nav from '../components/Nav.astro';
 import '../styles/global.css';
 
@@ -25,10 +26,19 @@ const { title, description = 'Rhys Sullivan', wide = false } = Astro.props;
       rel="stylesheet"
     />
     <title>{title}</title>
+    <ViewTransitions />
     <script is:inline>
-      const theme = localStorage.getItem('theme') ?? 
-        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-      if (theme === 'dark') document.documentElement.classList.add('dark');
+      function setTheme() {
+        const theme = localStorage.getItem('theme') ?? 
+          (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+      setTheme();
+      document.addEventListener('astro:after-swap', setTheme);
     </script>
   </head>
   <body>
