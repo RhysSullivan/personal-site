@@ -1,0 +1,34 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Post from '../../layouts/Post.astro';
+
+export async function getStaticPaths() {
+  const ideas = await getCollection('ideas');
+  return ideas.map((idea) => ({
+    params: { slug: idea.slug },
+    props: idea,
+  }));
+}
+
+type Props = CollectionEntry<'ideas'>;
+
+const idea = Astro.props;
+const { Content } = await idea.render();
+
+const statusColors: Record<string, string> = {
+  thinking: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400',
+  exploring: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  building: 'bg-green-500/10 text-green-600 dark:text-green-400',
+  shipped: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+  abandoned: 'bg-zinc-500/10 text-zinc-500',
+};
+---
+
+<Post title={idea.data.title} description={idea.data.description} date={idea.data.date}>
+  <div class="mb-6">
+    <span class={`text-xs px-2 py-1 rounded-full ${statusColors[idea.data.status]}`}>
+      {idea.data.status}
+    </span>
+  </div>
+  <Content />
+</Post>

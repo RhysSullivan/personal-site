@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: #fafafa;
+    --bg-secondary: #f4f4f5;
+    --text: #18181b;
+    --text-muted: #71717a;
+    --border: #e4e4e7;
+    --accent: #6366f1;
+  }
+
+  .dark {
+    --bg: #09090b;
+    --bg-secondary: #18181b;
+    --text: #fafafa;
+    --text-muted: #a1a1aa;
+    --border: #27272a;
+    --accent: #818cf8;
+  }
+
+  html {
+    @apply antialiased;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-[var(--bg)] text-[var(--text)] transition-colors duration-200;
+  }
+
+  ::selection {
+    background-color: rgb(99 102 241 / 0.2);
+  }
+
+  .dark ::selection {
+    background-color: rgb(129 140 248 / 0.2);
+  }
+}
+
+@layer components {
+  .prose {
+    @apply max-w-none;
+  }
+
+  .prose h1, .prose h2, .prose h3 {
+    @apply font-semibold tracking-tight text-[var(--text)];
+  }
+
+  .prose h1 {
+    @apply text-2xl mt-8 mb-4;
+  }
+
+  .prose h2 {
+    @apply text-xl mt-6 mb-3;
+  }
+
+  .prose h3 {
+    @apply text-lg mt-4 mb-2;
+  }
+
+  .prose p {
+    @apply leading-relaxed mb-4 text-[var(--text-muted)];
+  }
+
+  .prose a {
+    @apply text-[var(--accent)] underline underline-offset-2 hover:opacity-80 transition-opacity;
+  }
+
+  .prose code {
+    @apply font-mono text-sm bg-[var(--bg-secondary)] px-1.5 py-0.5 rounded;
+  }
+
+  .prose pre {
+    @apply bg-[var(--bg-secondary)] p-4 rounded-lg overflow-x-auto mb-4;
+  }
+
+  .prose pre code {
+    @apply bg-transparent p-0;
+  }
+
+  .prose ul, .prose ol {
+    @apply mb-4 pl-6 text-[var(--text-muted)];
+  }
+
+  .prose ul {
+    @apply list-disc;
+  }
+
+  .prose ol {
+    @apply list-decimal;
+  }
+
+  .prose li {
+    @apply mb-1;
+  }
+
+  .prose blockquote {
+    @apply border-l-2 border-[var(--accent)] pl-4 italic text-[var(--text-muted)] my-4;
+  }
+
+  .prose img {
+    @apply rounded-lg my-6;
+  }
+
+  .prose hr {
+    @apply border-[var(--border)] my-8;
+  }
+}

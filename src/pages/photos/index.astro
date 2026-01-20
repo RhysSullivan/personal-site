@@ -1,0 +1,93 @@
+---
+import Base from '../../layouts/Base.astro';
+
+interface Photo {
+  src: string;
+  alt: string;
+  title: string;
+  date: string;
+  details?: string;
+}
+
+const photos: Photo[] = [
+  {
+    src: '/photos/space/m33-triangulum-2026-01-17.jpeg',
+    alt: 'Triangulum Galaxy',
+    title: 'M33 - Triangulum Galaxy',
+    date: 'Jan 17, 2026',
+  },
+  {
+    src: '/photos/space/m42-orion-nebula-2026-01-15.jpeg',
+    alt: 'Orion Nebula',
+    title: 'M42 - Orion Nebula (edited)',
+    date: 'Jan 15, 2026',
+  },
+  {
+    src: '/photos/space/m42-orion-wide-2026-01-15.jpeg',
+    alt: 'Orion Nebula',
+    title: 'M42 - Orion Nebula',
+    date: 'Jan 15, 2026',
+  },
+  {
+    src: '/photos/space/m81-m82-bodes-cigar-2026-01-14.jpeg',
+    alt: "Bode's Galaxy and Cigar Galaxy",
+    title: "M81/M82 - Bode's & Cigar Galaxy",
+    date: 'Jan 14, 2026',
+  },
+  {
+    src: '/photos/space/ic443-jellyfish-nebula-2026-01-12.jpeg',
+    alt: 'Jellyfish Nebula',
+    title: 'IC 443 - Jellyfish Nebula',
+    date: 'Jan 12, 2026',
+  },
+  {
+    src: '/photos/space/ic1848-soul-nebula-2026-01-09.jpeg',
+    alt: 'Soul Nebula',
+    title: 'IC 1848 - Soul Nebula',
+    date: 'Jan 9, 2026',
+  },
+  {
+    src: '/photos/space/m31-andromeda-2025-12-28.jpeg',
+    alt: 'Andromeda Galaxy',
+    title: 'M31 - Andromeda Galaxy',
+    date: 'Dec 28, 2025',
+  },
+];
+---
+
+<Base title="Photos - Rhys Sullivan" description="Astrophotography and space photos." wide>
+  <div>
+    <h1 class="text-2xl font-semibold tracking-tight mb-2">space photos</h1>
+    <p class="text-[var(--text-muted)] mb-8">
+      captured inside san francisco from my patio
+    </p>
+
+    {photos.length === 0 ? (
+      <p class="text-[var(--text-muted)]">photos coming soon</p>
+    ) : (
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {photos.map((photo) => (
+          <figure class="group">
+            <div class="relative overflow-hidden rounded-lg bg-[var(--bg-secondary)]">
+              <img
+                src={photo.src}
+                alt={photo.alt}
+                class="w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                loading="lazy"
+              />
+              <figcaption class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
+                <h3 class="font-medium text-sm text-white">{photo.title}</h3>
+                <div class="flex items-baseline justify-between gap-2">
+                  <span class="text-xs text-white/70">{photo.date}</span>
+                  {photo.details && (
+                    <span class="text-xs text-white/70">{photo.details}</span>
+                  )}
+                </div>
+              </figcaption>
+            </div>
+          </figure>
+        ))}
+      </div>
+    )}
+  </div>
+</Base>

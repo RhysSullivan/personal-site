@@ -1,0 +1,102 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const recentPosts = (await getCollection('blog'))
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+
+const recentIdeas = (await getCollection('ideas'))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+---
+
+<Base title="Rhys Sullivan">
+  <div class="space-y-12">
+    <section>
+      <h1 class="text-2xl font-semibold tracking-tight mb-4">Rhys Sullivan</h1>
+      <p class="text-[var(--text-muted)] leading-relaxed">
+        Software engineer. Currently at Vercel. I like building things, taking photos of space, and thinking about ideas that may never ship.
+      </p>
+      <div class="flex gap-4 mt-4">
+        <a
+          href="https://github.com/rhyssullivan"
+          target="_blank"
+          class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+        >
+          github
+        </a>
+        <a
+          href="https://twitter.com/rhyssullivan"
+          target="_blank"
+          class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+        >
+          twitter
+        </a>
+      </div>
+    </section>
+
+    {recentPosts.length > 0 && (
+      <section>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-medium">recent posts</h2>
+          <a href="/blog" class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
+            all posts &rarr;
+          </a>
+        </div>
+        <ul class="space-y-3">
+          {recentPosts.map((post) => (
+            <li>
+              <a href={`/blog/${post.slug}`} class="group flex items-baseline justify-between gap-4">
+                <span class="text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors truncate">
+                  {post.data.title}
+                </span>
+                <span class="text-sm text-[var(--text-muted)] shrink-0">
+                  {post.data.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    {recentIdeas.length > 0 && (
+      <section>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-medium">project ideas</h2>
+          <a href="/ideas" class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
+            all ideas &rarr;
+          </a>
+        </div>
+        <ul class="space-y-3">
+          {recentIdeas.map((idea) => (
+            <li>
+              <a href={`/ideas/${idea.slug}`} class="group flex items-baseline justify-between gap-4">
+                <span class="text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors truncate">
+                  {idea.data.title}
+                </span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--bg-secondary)] text-[var(--text-muted)]">
+                  {idea.data.status}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-medium">space photos</h2>
+        <a href="/photos" class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
+          all photos &rarr;
+        </a>
+      </div>
+      <p class="text-sm text-[var(--text-muted)]">
+        astrophotography coming soon
+      </p>
+    </section>
+  </div>
+</Base>
