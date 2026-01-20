@@ -49,11 +49,11 @@ const photos = (await getCollection('photos'))
         {photos.length === 0 ? (
           <p class="text-[var(--text-muted)]">photos coming soon</p>
         ) : (
-          <div class="columns-1 sm:columns-2 lg:columns-3 gap-4">
+          <div class="grid grid-cols-2 lg:grid-cols-3 gap-4" id="photo-grid">
             {photos.map((photo) => (
               <a
                 href={`/photos/${photo.slug}`}
-                class="group block mb-4 break-inside-avoid"
+                class="group block"
               >
                 <figure>
                   <div class="relative overflow-hidden rounded-lg bg-[var(--bg-secondary)]">
@@ -77,5 +77,42 @@ const photos = (await getCollection('photos'))
         )}
       </div>
     </div>
+    
+    <script>
+      function initMasonry() {
+        const grid = document.getElementById('photo-grid');
+        if (!grid) return;
+        
+        const items = Array.from(grid.children) as HTMLElement[];
+        const gap = 16;
+        
+        function layout() {
+          const gridWidth = grid.offsetWidth;
+          const cols = window.innerWidth >= 1024 ? 3 : 2;
+          const colWidth = (gridWidth - gap * (cols - 1)) / cols;
+          const colHeights = new Array(cols).fill(0);
+          
+          items.forEach((item) => {
+            const shortestCol = colHeights.indexOf(Math.min(...colHeights));
+            
+            item.style.position = 'absolute';
+            item.style.width = `${colWidth}px`;
+            item.style.left = `${shortestCol * (colWidth + gap)}px`;
+            item.style.top = `${colHeights[shortestCol]}px`;
+            
+            colHeights[shortestCol] += item.offsetHeight + gap;
+          });
+          
+          grid.style.position = 'relative';
+          grid.style.height = `${Math.max(...colHeights)}px`;
+        }
+        
+        layout();
+        window.addEventListener('resize', layout);
+      }
+      
+      initMasonry();
+      document.addEventListener('astro:after-swap', initMasonry);
+    </script>
   </body>
 </html>
