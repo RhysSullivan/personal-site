@@ -1,0 +1,58 @@
+---
+import Base from "../layouts/Base.astro";
+
+const software = [
+  {
+    name: "Cap",
+    url: "https://cap.so",
+    repo: "https://github.com/CapSoftware/Cap",
+    description: "",
+  },
+  {
+    name: "Raycast",
+    url: "https://raycast.com",
+    description: "",
+  },
+  {
+    name: "Convex",
+    url: "https://convex.dev",
+    description: "",
+  },
+];
+---
+
+<Base title="Software I Like - Rhys Sullivan" description="Software I like.">
+  <div>
+    <h1 class="text-2xl font-semibold tracking-tight mb-2">software i like</h1>
+    <p class="text-[var(--text-muted)] mb-8"></p>
+
+    <ul class="space-y-4">
+      {
+        software.map((item) => (
+          <li>
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="group block p-4 -mx-4 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
+            >
+              <div class="flex items-center gap-3 mb-1">
+                <h2 class="font-medium group-hover:text-[var(--accent)] transition-colors">
+                  {item.name}
+                </h2>
+                <span class="text-xs text-[var(--text-muted)]">
+                  {new URL(item.url).hostname}
+                </span>
+              </div>
+              {item.description && (
+                <p class="text-sm text-[var(--text-muted)]">
+                  {item.description}
+                </p>
+              )}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</Base>
