@@ -30,7 +30,7 @@ const formattedDate = photo.data.date.toLocaleDateString('en-US', {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={photo.data.alt} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -84,12 +84,6 @@ const formattedDate = photo.data.date.toLocaleDateString('en-US', {
       </main>
     </div>
     
-    <script>
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          window.location.href = '/photos';
-        }
-      });
-    </script>
+
   </body>
 </html>

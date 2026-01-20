@@ -18,7 +18,7 @@ const { title, description = 'Rhys Sullivan', wide = false } = Astro.props;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -39,6 +39,16 @@ const { title, description = 'Rhys Sullivan', wide = false } = Astro.props;
       }
       setTheme();
       document.addEventListener('astro:after-swap', setTheme);
+      
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && window.history.length > 1) {
+          window.history.back();
+        }
+      });
     </script>
   </head>
   <body>

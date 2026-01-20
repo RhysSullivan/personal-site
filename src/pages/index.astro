@@ -1,19 +1,32 @@
 ---
 import Base from '../layouts/Base.astro';
+import CroppedImage from '../components/CroppedImage.astro';
 import { getCollection } from 'astro:content';
 
-const recentPosts = (await getCollection('blog'))
+const posts = (await getCollection('blog'))
   .filter((post) => !post.data.draft)
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-  .slice(0, 3);
+  .map((post) => ({ type: 'blog' as const, date: post.data.date, data: post }));
 
-const recentIdeas = (await getCollection('ideas'))
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-  .slice(0, 3);
+const ideas = (await getCollection('ideas'))
+  .map((idea) => ({ type: 'idea' as const, date: idea.data.date, data: idea }));
+
+const photos = (await getCollection('photos'))
+  .map((photo) => ({ type: 'photo' as const, date: photo.data.date, data: photo }));
+
+const feed = [...posts, ...ideas, ...photos]
+  .sort((a, b) => b.date.valueOf() - a.date.valueOf());
+
+const statusColors: Record<string, string> = {
+  thinking: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400',
+  exploring: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  building: 'bg-green-500/10 text-green-600 dark:text-green-400',
+  shipped: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+  abandoned: 'bg-zinc-500/10 text-zinc-500',
+};
 ---
 
 <Base title="Rhys Sullivan">
-  <div class="space-y-12">
+  <div class="space-y-8">
     <section>
       <h1 class="text-2xl font-semibold tracking-tight mb-4">Rhys Sullivan</h1>
       <p class="text-[var(--text-muted)] leading-relaxed">
@@ -37,66 +50,66 @@ const recentIdeas = (await getCollection('ideas'))
       </div>
     </section>
 
-    {recentPosts.length > 0 && (
-      <section>
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-medium">recent posts</h2>
-          <a href="/blog" class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
-            all posts &rarr;
-          </a>
-        </div>
-        <ul class="space-y-3">
-          {recentPosts.map((post) => (
-            <li>
-              <a href={`/blog/${post.slug}`} class="group flex items-baseline justify-between gap-4">
-                <span class="text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors truncate">
-                  {post.data.title}
+    <section class="space-y-4">
+      {feed.map((item) => {
+        if (item.type === 'blog') {
+          return (
+            <a href={`/blog/${item.data.slug}`} class="group block p-4 -mx-4 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs text-[var(--text-muted)]">blog</span>
+                <span class="text-xs text-[var(--text-muted)]">·</span>
+                <span class="text-xs text-[var(--text-muted)]">
+                  {item.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </span>
-                <span class="text-sm text-[var(--text-muted)] shrink-0">
-                  {post.data.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </div>
+              <h3 class="font-medium group-hover:text-[var(--accent)] transition-colors">{item.data.data.title}</h3>
+              <p class="text-sm text-[var(--text-muted)] mt-1">{item.data.data.description}</p>
+            </a>
+          );
+        }
+        
+        if (item.type === 'idea') {
+          return (
+            <a href={`/ideas/${item.data.slug}`} class="group block p-4 -mx-4 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs text-[var(--text-muted)]">idea</span>
+                <span class="text-xs text-[var(--text-muted)]">·</span>
+                <span class="text-xs text-[var(--text-muted)]">
+                  {item.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
-    )}
-
-    {recentIdeas.length > 0 && (
-      <section>
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-medium">project ideas</h2>
-          <a href="/ideas" class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
-            all ideas &rarr;
-          </a>
-        </div>
-        <ul class="space-y-3">
-          {recentIdeas.map((idea) => (
-            <li>
-              <a href={`/ideas/${idea.slug}`} class="group flex items-baseline justify-between gap-4">
-                <span class="text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors truncate">
-                  {idea.data.title}
+                <span class={`text-xs px-2 py-0.5 rounded-full ${statusColors[item.data.data.status]}`}>
+                  {item.data.data.status}
                 </span>
-                <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--bg-secondary)] text-[var(--text-muted)]">
-                  {idea.data.status}
+              </div>
+              <h3 class="font-medium group-hover:text-[var(--accent)] transition-colors">{item.data.data.title}</h3>
+              <p class="text-sm text-[var(--text-muted)] mt-1">{item.data.data.description}</p>
+            </a>
+          );
+        }
+        
+        if (item.type === 'photo') {
+          return (
+            <a href={`/photos/${item.data.slug}`} class="group block p-4 -mx-4 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-xs text-[var(--text-muted)]">space</span>
+                <span class="text-xs text-[var(--text-muted)]">·</span>
+                <span class="text-xs text-[var(--text-muted)]">
+                  {item.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
-    )}
-
-    <section>
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-medium">space photos</h2>
-        <a href="/photos" class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
-          all photos &rarr;
-        </a>
-      </div>
-      <p class="text-sm text-[var(--text-muted)]">
-        astrophotography coming soon
-      </p>
+              </div>
+              <div class="overflow-hidden rounded-lg max-w-sm">
+                <CroppedImage
+                  src={item.data.data.image}
+                  alt={item.data.data.alt}
+                  cropArea={item.data.data.cropArea}
+                  class="w-full"
+                />
+              </div>
+              <h3 class="font-medium mt-2 group-hover:text-[var(--accent)] transition-colors">{item.data.data.title}</h3>
+            </a>
+          );
+        }
+      })}
     </section>
   </div>
 </Base>
