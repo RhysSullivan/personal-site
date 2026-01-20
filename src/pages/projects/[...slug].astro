@@ -1,0 +1,49 @@
+---
+import { getCollection, type CollectionEntry } from "astro:content";
+import Post from "../../layouts/Post.astro";
+
+export async function getStaticPaths() {
+  const projects = await getCollection("projects");
+  return projects.map((project) => ({
+    params: { slug: project.slug },
+    props: project,
+  }));
+}
+
+type Props = CollectionEntry<"projects">;
+
+const project = Astro.props;
+const { Content } = await project.render();
+---
+
+<Post
+  title={project.data.title}
+  description={project.data.description}
+  date={project.data.date}
+>
+  <div class="flex gap-4 mb-6 text-sm">
+    {
+      project.data.url && (
+        <a
+          href={project.data.url}
+          target="_blank"
+          class="text-[var(--accent)] hover:underline"
+        >
+          Visit site
+        </a>
+      )
+    }
+    {
+      project.data.repo && (
+        <a
+          href={project.data.repo}
+          target="_blank"
+          class="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+        >
+          Source code
+        </a>
+      )
+    }
+  </div>
+  <Content />
+</Post>
