@@ -20,4 +20,15 @@ const ideas = defineCollection({
   }),
 });
 
-export const collections = { blog, ideas };
+const photos = defineCollection({
+  type: 'content',
+  schema: z.object({
+    title: z.string(),
+    src: z.string(),
+    alt: z.string(),
+    date: z.coerce.date(),
+    featured: z.boolean().default(false),
+  }),
+});
+
+export const collections = { blog, ideas, photos };

@@ -1,0 +1,48 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const photos = await getCollection('photos');
+  return photos.map((photo) => ({
+    params: { slug: photo.slug },
+    props: photo,
+  }));
+}
+
+type Props = CollectionEntry<'photos'>;
+
+const photo = Astro.props;
+const { Content } = await photo.render();
+
+const formattedDate = photo.data.date.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<Base title={`${photo.data.title} - Rhys Sullivan`} description={photo.data.alt}>
+  <article>
+    <a href="/photos" class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-6 inline-block">
+      &larr; back to photos
+    </a>
+    
+    <div class="mb-6">
+      <img
+        src={photo.data.src}
+        alt={photo.data.alt}
+        class="w-full rounded-lg"
+      />
+    </div>
+
+    <header class="mb-6">
+      <h1 class="text-2xl font-semibold tracking-tight">{photo.data.title}</h1>
+      <time class="text-sm text-[var(--text-muted)]">{formattedDate}</time>
+    </header>
+
+    <div class="prose">
+      <Content />
+    </div>
+  </article>
+</Base>
