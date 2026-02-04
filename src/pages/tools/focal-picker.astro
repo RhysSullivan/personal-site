@@ -82,6 +82,17 @@ const photos = await getCollection('photos');
         border-radius: 4px;
       }
       .reset-btn:hover { background: #555; }
+      .copy-btn {
+        margin-left: 1rem;
+        padding: 0.5rem 1rem;
+        background: #6366f1;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      .copy-btn:hover { background: #4f46e5; }
+      .copy-btn.copied { background: #22c55e; }
       .dimensions {
         margin-top: 0.5rem;
         color: #888;
@@ -122,6 +133,7 @@ const photos = await getCollection('photos');
     <div class="output">
       <p>Add this to your MDX frontmatter:</p>
       <code id="outputCode">cropArea: "0% 0% 100% 100%"</code>
+      <button class="copy-btn" id="copyBtn">Copy</button>
     </div>
 
     <script>
@@ -139,6 +151,8 @@ const photos = await getCollection('photos');
       let startX = 0, startY = 0;
       let cropX = 0, cropY = 0, cropW = 100, cropH = 100;
       let imgWidth = 0, imgHeight = 0;
+      let currentSlug = '';
+      const copyBtn = document.getElementById('copyBtn') as HTMLButtonElement;
 
       function loadImage(src: string) {
         mainImage.src = src;
@@ -189,7 +203,21 @@ const photos = await getCollection('photos');
         btn.addEventListener('click', () => {
           buttons.forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
+          currentSlug = btn.getAttribute('data-slug') || '';
           loadImage(btn.getAttribute('data-src') || '');
+        });
+      });
+
+      copyBtn.addEventListener('click', () => {
+        const cropAreaValue = `${Math.round(cropX)}% ${Math.round(cropY)}% ${Math.round(cropW)}% ${Math.round(cropH)}%`;
+        const text = `file: src/content/photos/${currentSlug}.mdx\ncropArea: "${cropAreaValue}"`;
+        navigator.clipboard.writeText(text).then(() => {
+          copyBtn.textContent = 'Copied!';
+          copyBtn.classList.add('copied');
+          setTimeout(() => {
+            copyBtn.textContent = 'Copy';
+            copyBtn.classList.remove('copied');
+          }, 2000);
         });
       });
 
@@ -234,6 +262,7 @@ const photos = await getCollection('photos');
 
       const firstBtn = buttons[0] as HTMLButtonElement;
       if (firstBtn) {
+        currentSlug = firstBtn.getAttribute('data-slug') || '';
         loadImage(firstBtn.getAttribute('data-src') || '');
       }
     </script>

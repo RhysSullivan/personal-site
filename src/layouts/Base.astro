@@ -24,7 +24,7 @@ const showBg = !pathname.startsWith('/photos');
 const hash = pathname.split('').reduce((acc, char, i) => acc + char.charCodeAt(0) * (i + 1) * 31, 0);
 const bgImage = showBg && photoList.length > 0 ? photoList[Math.abs(hash) % photoList.length] : null;
 
-const optimizedBg = bgImage ? await getImage({ src: bgImage, width: 1920, quality: 80 }) : null;
+const optimizedBg = bgImage ? await getImage({ src: bgImage, width: 2560, quality: 95 }) : null;
 const slug = ogSlug ?? (pathname.replace(/^\//, '').replace(/\/$/, '') || 'index');
 const ogImage = `/og/${slug}.png`;
 ---
