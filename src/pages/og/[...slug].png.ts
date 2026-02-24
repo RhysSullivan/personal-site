@@ -9,7 +9,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
   const photos = await getCollection("photos");
 
   const pages = [
-    { slug: "index", title: "Rhys Sullivan", description: "Software engineer at Vercel", type: "home" },
+    { slug: "index", title: "Rhys Sullivan", description: "Software engineer at OpenCode", type: "home" },
     { slug: "blog", title: "Blog", description: "", type: "section" },
     { slug: "ideas", title: "Ideas", description: "", type: "section" },
     { slug: "projects", title: "Projects", description: "", type: "section" },
