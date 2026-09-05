@@ -73,6 +73,10 @@ const formattedDate = photo.data.date.toLocaleDateString('en-US', {
       />
     </div>
 
+    <a href={photo.data.image.src} download class="inline-block mb-8 text-sm text-[var(--text-muted)] underline hover:text-[var(--text)] transition-colors">
+      full resolution
+    </a>
+
     <div class="prose max-w-2xl">
       <Content />
     </div>
