@@ -26,14 +26,15 @@ const imageSizes = `(max-width: 1023px) ${50 * scaleX}vw, ${500 * scaleX}px`;
 ---
 
 <div 
+  data-crop-frame
   class:list={["overflow-hidden relative", className]}
-  style={`aspect-ratio: ${aspectRatio};`}
+  style={`aspect-ratio: ${aspectRatio}; --full-aspect: ${src.width / src.height};`}
 >
   <Image
     src={src}
     alt={alt}
     class="absolute w-full h-full"
-    style={`width: ${scaleX * 100}% !important; height: ${scaleY * 100}% !important; left: ${offsetX}%; top: ${offsetY}%; max-width: none;`}
+    style={`width: ${scaleX * 100}%; height: ${scaleY * 100}%; left: ${offsetX}%; top: ${offsetY}%; max-width: none;`}
     widths={imageWidths}
     sizes={imageSizes}
     quality={100}
