@@ -12,6 +12,7 @@ function getAspectRatio(photo: typeof photos[0]) {
 }
 
 const aspectRatios = photos.map(p => getAspectRatio(p));
+const fullAspectRatios = photos.map(p => p.data.image.width / p.data.image.height);
 ---
 
 <Base title="Photos - Rhys Sullivan" description="Astrophotography and space photos." wide>
@@ -24,7 +25,12 @@ const aspectRatios = photos.map(p => getAspectRatio(p));
     {photos.length === 0 ? (
       <p class="text-[var(--text-muted)]">photos coming soon</p>
     ) : (
-      <div class="relative" id="photo-grid" data-aspects={JSON.stringify(aspectRatios)}>
+      <>
+      <div class="photo-view-toggle" role="group" aria-label="Photo framing">
+        <button type="button" data-photo-view="cropped" aria-pressed="true" aria-controls="photo-grid">Cropped</button>
+        <button type="button" data-photo-view="uncropped" aria-pressed="false" aria-controls="photo-grid">Uncropped</button>
+      </div>
+      <div class="relative" id="photo-grid" data-view="cropped" data-aspects={JSON.stringify(aspectRatios)} data-full-aspects={JSON.stringify(fullAspectRatios)}>
         {photos.map((photo, i) => (
           <a
             href={`/photos/${photo.slug}`}
@@ -50,9 +56,44 @@ const aspectRatios = photos.map(p => getAspectRatio(p));
           </a>
         ))}
       </div>
+      </>
     )}
   </div>
   
+  <style>
+    .photo-view-toggle {
+      display: inline-flex;
+      gap: 2px;
+      padding: 3px;
+      margin-bottom: 24px;
+      border: 1px solid var(--text-muted);
+      border-radius: 999px;
+    }
+    .photo-view-toggle button {
+      padding: 7px 16px;
+      border-radius: 999px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .photo-view-toggle button[aria-pressed="true"] {
+      color: var(--bg);
+      background: var(--text);
+    }
+    .photo-view-toggle button:focus-visible {
+      outline: 2px solid var(--text);
+      outline-offset: 3px;
+    }
+    #photo-grid[data-view="uncropped"] :global([data-crop-frame]) {
+      aspect-ratio: var(--full-aspect) !important;
+    }
+    #photo-grid[data-view="uncropped"] :global(img) {
+      width: 100% !important;
+      height: 100% !important;
+      left: 0 !important;
+      top: 0 !important;
+    }
+  </style>
+
   <script is:inline>
     (function() {
       const gap = 16;
@@ -68,7 +109,7 @@ const aspectRatios = photos.map(p => getAspectRatio(p));
           return;
         }
         
-        const aspects = JSON.parse(grid.dataset.aspects || '[]');
+        const aspects = JSON.parse(grid.dataset.view === 'uncropped' ? grid.dataset.fullAspects : grid.dataset.aspects);
         const items = Array.from(grid.children);
         const cols = window.innerWidth >= 1024 ? 3 : 2;
         const colWidth = (gridWidth - gap * (cols - 1)) / cols;
@@ -91,6 +132,17 @@ const aspectRatios = photos.map(p => getAspectRatio(p));
       
       // astro:page-load fires on initial load AND after every View Transition
       document.addEventListener('astro:page-load', function() {
+        document.querySelectorAll('[data-photo-view]').forEach(button => {
+          button.onclick = function() {
+            const grid = document.getElementById('photo-grid');
+            if (!grid) return;
+            grid.dataset.view = button.dataset.photoView;
+            document.querySelectorAll('[data-photo-view]').forEach(option => {
+              option.setAttribute('aria-pressed', String(option === button));
+            });
+            layout();
+          };
+        });
         requestAnimationFrame(layout);
       });
       window.addEventListener('resize', layout);

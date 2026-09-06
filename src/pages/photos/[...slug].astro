@@ -45,12 +45,12 @@ const formattedDate = photo.data.date.toLocaleDateString('en-US', {
       </a>
       <div class="flex gap-4 select-none">
         {prevPhoto && (
-          <a href={`/photos/${prevPhoto.slug}`} class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
+          <a href={`/photos/${prevPhoto.slug}`} data-photo-nav="previous" aria-keyshortcuts="ArrowLeft" class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
             &larr; prev
           </a>
         )}
         {nextPhoto && (
-          <a href={`/photos/${nextPhoto.slug}`} class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
+          <a href={`/photos/${nextPhoto.slug}`} data-photo-nav="next" aria-keyshortcuts="ArrowRight" class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
             next &rarr;
           </a>
         )}
@@ -73,10 +73,28 @@ const formattedDate = photo.data.date.toLocaleDateString('en-US', {
       />
     </div>
 
+    <a href={photo.data.image.src} download class="inline-block mb-8 text-sm text-[var(--text-muted)] underline hover:text-[var(--text)] transition-colors">
+      full resolution
+    </a>
+
     <div class="prose max-w-2xl">
       <Content />
     </div>
 
     
   </article>
+  <script>
+    document.addEventListener('keydown', (event) => {
+      if (event.defaultPrevented || event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (event.target instanceof HTMLElement && event.target.closest('input, textarea, select, [contenteditable], [role="textbox"]')) return;
+
+      const direction = event.key === 'ArrowLeft' ? 'previous' : event.key === 'ArrowRight' ? 'next' : null;
+      if (direction === null) return;
+      const link = document.querySelector<HTMLAnchorElement>(`a[data-photo-nav="${direction}"]`);
+      if (!link) return;
+
+      event.preventDefault();
+      link.click();
+    });
+  </script>
 </Base>
