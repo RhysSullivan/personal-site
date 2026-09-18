@@ -70,6 +70,7 @@ const { Content } = await project.render();
   ) : project.data.media?.kind === "recordings" ? (
     project.data.media.clips.map((clip) => (
       <video
+        data-project-recording
         src={clip.src}
         poster={clip.poster}
         width={clip.width}
@@ -107,3 +108,13 @@ const { Content } = await project.render();
   )}
   <Content />
 </Post>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    // Media parsed in the router's detached document needs source selection
+    // after adoption into the live page. Keep preload="none" and no autoplay.
+    for (const video of document.querySelectorAll<HTMLVideoElement>("video[data-project-recording]")) {
+      video.load();
+    }
+  });
+</script>
