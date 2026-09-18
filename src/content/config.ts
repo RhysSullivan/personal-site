@@ -40,6 +40,35 @@ const projects = defineCollection({
     url: z.string().url().optional(),
     repo: z.string().url().optional(),
     date: z.coerce.date(),
+    period: z.string().optional(),
+    role: z.string().optional(),
+    preview: z.object({
+      src: z.string(),
+      alt: z.string(),
+      width: z.number().int().positive(),
+      height: z.number().int().positive(),
+    }).optional(),
+    media: z.discriminatedUnion('kind', [
+      z.object({ kind: z.literal('youtube'), id: z.string().regex(/^[\w-]{11}$/) }),
+      z.object({
+        kind: z.literal('recordings'),
+        source: z.string().url(),
+        clips: z.array(z.object({
+          src: z.string(),
+          poster: z.string(),
+          title: z.string(),
+          width: z.number().int().positive(),
+          height: z.number().int().positive(),
+        })).nonempty(),
+      }),
+      z.object({
+        kind: z.literal('animation'),
+        src: z.string(),
+        alt: z.string(),
+        width: z.number().int().positive(),
+        height: z.number().int().positive(),
+      }),
+    ]).optional(),
   }),
 });
 

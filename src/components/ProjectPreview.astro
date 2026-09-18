@@ -1,0 +1,30 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  project: CollectionEntry<"projects">;
+  compact?: boolean;
+}
+
+const { project, compact = false } = Astro.props;
+const { preview, media } = project.data;
+---
+
+{preview && (
+  <div class:list={["relative overflow-hidden rounded-lg bg-[var(--bg-secondary)]", compact && "max-w-xs"]}>
+    <img
+      src={preview.src}
+      alt={preview.alt}
+      width={preview.width}
+      height={preview.height}
+      loading="lazy"
+      decoding="async"
+      class="w-full aspect-video object-contain"
+    />
+    {(media?.kind === "youtube" || media?.kind === "recordings") && (
+      <span class="absolute bottom-2 right-2 rounded bg-black/80 px-2 py-1 text-xs text-white">
+        Video demo
+      </span>
+    )}
+  </div>
+)}
