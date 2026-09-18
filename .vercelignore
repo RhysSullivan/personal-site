@@ -1,0 +1,7 @@
+.reference/
+.rift
+.astro/
+dist/
+node_modules/
+.env
+.env.*

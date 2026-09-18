@@ -12,23 +12,34 @@ function getAspectRatio(photo: typeof photos[0]) {
 }
 
 const aspectRatios = photos.map(p => getAspectRatio(p));
+const fullAspectRatios = photos.map(p => p.data.image.width / p.data.image.height);
 ---
 
 <Base title="Photos - Rhys Sullivan" description="Astrophotography and space photos." wide>
   <div>
-    <h1 class="text-2xl font-semibold tracking-tight mb-2">space photos</h1>
-    <p class="text-[var(--text-muted)] mb-8">
-      captured in san francisco using my <a href="https://amzn.to/49FP2sh" target="_blank" class="underline hover:text-[var(--text)] transition-colors">dwarf 3</a>
-    </p>
+    <header class="photo-header">
+      <div>
+        <h1 class="text-2xl font-semibold tracking-tight mb-2">space photos</h1>
+        <p class="text-[var(--text-muted)]">
+          captured in san francisco using my <a href="https://amzn.to/49FP2sh" target="_blank" class="underline hover:text-[var(--text)] transition-colors">dwarf 3</a>
+        </p>
+      </div>
+      {photos.length > 0 && (
+        <div class="photo-view-toggle" role="group" aria-label="Photo framing">
+          <button type="button" data-photo-view="cropped" aria-pressed="true" aria-controls="photo-grid">Cropped</button>
+          <button type="button" data-photo-view="uncropped" aria-pressed="false" aria-controls="photo-grid">Uncropped</button>
+        </div>
+      )}
+    </header>
 
     {photos.length === 0 ? (
       <p class="text-[var(--text-muted)]">photos coming soon</p>
     ) : (
-      <div class="relative" id="photo-grid" data-aspects={JSON.stringify(aspectRatios)}>
+      <div class="relative" id="photo-grid" data-view="cropped" data-aspects={JSON.stringify(aspectRatios)} data-full-aspects={JSON.stringify(fullAspectRatios)}>
         {photos.map((photo, i) => (
           <a
             href={`/photos/${photo.slug}`}
-            class="group block"
+            class="photo-card group block rounded-lg"
             data-index={i}
           >
             <figure>
@@ -39,7 +50,7 @@ const aspectRatios = photos.map(p => getAspectRatio(p));
                   cropArea={photo.data.cropArea}
                   class="w-full"
                 />
-                <figcaption class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 to-transparent z-10">
+                <figcaption class="photo-details absolute inset-x-0 bottom-0 p-4 pt-12 bg-gradient-to-t from-black/80 to-transparent z-10">
                   <h3 class="font-medium text-sm text-white">{photo.data.title}</h3>
                   <span class="text-xs text-white/70">
                     {photo.data.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -53,6 +64,100 @@ const aspectRatios = photos.map(p => getAspectRatio(p));
     )}
   </div>
   
+  <style>
+    .photo-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .photo-card:focus-visible {
+      outline: 2px solid var(--text);
+      outline-offset: 4px;
+    }
+    .photo-details {
+      pointer-events: none;
+      transition: opacity 220ms ease, transform 280ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .photo-details {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      .photo-card:hover .photo-details,
+      .photo-card:focus-within .photo-details {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .photo-view-toggle {
+      position: relative;
+      isolation: isolate;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      flex-shrink: 0;
+      margin-left: auto;
+      padding: 3px;
+      border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+      background: var(--bg-secondary);
+      border-radius: 10px;
+    }
+    .photo-view-toggle::before {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      inset: 3px auto 3px 3px;
+      width: calc((100% - 6px) / 2);
+      border-radius: 7px;
+      background: color-mix(in srgb, var(--text) 12%, var(--bg));
+      box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
+      transition: transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+    .photo-view-toggle:has([data-photo-view="uncropped"][aria-pressed="true"])::before {
+      transform: translateX(100%);
+    }
+    .photo-view-toggle button {
+      min-height: 34px;
+      padding: 6px 12px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: color 160ms ease;
+    }
+    .photo-view-toggle button[aria-pressed="true"],
+    .photo-view-toggle button:hover {
+      color: var(--text);
+    }
+    .photo-view-toggle button:focus-visible {
+      outline: 2px solid var(--text);
+      outline-offset: 3px;
+    }
+    @media (pointer: coarse) {
+      .photo-view-toggle button {
+        min-height: 44px;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .photo-details,
+      .photo-view-toggle::before,
+      .photo-view-toggle button {
+        transition: none;
+      }
+    }
+    #photo-grid[data-view="uncropped"] :global([data-crop-frame]) {
+      aspect-ratio: var(--full-aspect) !important;
+    }
+    #photo-grid[data-view="uncropped"] :global(img) {
+      width: 100% !important;
+      height: 100% !important;
+      left: 0 !important;
+      top: 0 !important;
+    }
+  </style>
+
   <script is:inline>
     (function() {
       const gap = 16;
@@ -68,7 +173,7 @@ const aspectRatios = photos.map(p => getAspectRatio(p));
           return;
         }
         
-        const aspects = JSON.parse(grid.dataset.aspects || '[]');
+        const aspects = JSON.parse(grid.dataset.view === 'uncropped' ? grid.dataset.fullAspects : grid.dataset.aspects);
         const items = Array.from(grid.children);
         const cols = window.innerWidth >= 1024 ? 3 : 2;
         const colWidth = (gridWidth - gap * (cols - 1)) / cols;
@@ -91,6 +196,17 @@ const aspectRatios = photos.map(p => getAspectRatio(p));
       
       // astro:page-load fires on initial load AND after every View Transition
       document.addEventListener('astro:page-load', function() {
+        document.querySelectorAll('[data-photo-view]').forEach(button => {
+          button.onclick = function() {
+            const grid = document.getElementById('photo-grid');
+            if (!grid) return;
+            grid.dataset.view = button.dataset.photoView;
+            document.querySelectorAll('[data-photo-view]').forEach(option => {
+              option.setAttribute('aria-pressed', String(option === button));
+            });
+            layout();
+          };
+        });
         requestAnimationFrame(layout);
       });
       window.addEventListener('resize', layout);
