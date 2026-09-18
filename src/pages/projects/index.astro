@@ -1,6 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { getCollection } from "astro:content";
+import ProjectPreview from "../../components/ProjectPreview.astro";
 
 const projects = (await getCollection("projects")).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
@@ -23,10 +24,16 @@ const projects = (await getCollection("projects")).sort(
                 href={`/projects/${project.slug}`}
                 class="group block p-4 -mx-4 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
               >
-                <div class="flex items-center gap-3 mb-2">
+                {project.data.preview && (
+                  <div class="mb-3"><ProjectPreview project={project} /></div>
+                )}
+                <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
                   <h2 class="font-medium group-hover:text-[var(--accent)] transition-colors">
                     {project.data.title}
                   </h2>
+                  <span class="text-xs text-[var(--text-muted)]">
+                    {project.data.period ?? project.data.date.getUTCFullYear()}
+                  </span>
                   {project.data.url && (
                     <span class="text-xs text-[var(--text-muted)]">
                       {new URL(project.data.url).hostname}

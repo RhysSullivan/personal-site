@@ -20,13 +20,16 @@ const { Content } = await project.render();
   title={project.data.title}
   description={project.data.description}
   date={project.data.date}
+  period={project.data.period}
 >
+  {project.data.role && <p class="text-sm">{project.data.role}</p>}
   <div class="flex gap-4 mb-6 text-sm">
     {
       project.data.url && (
         <a
           href={project.data.url}
           target="_blank"
+          rel="noopener noreferrer"
           class="text-[var(--accent)] hover:underline"
         >
           Visit site
@@ -38,12 +41,69 @@ const { Content } = await project.render();
         <a
           href={project.data.repo}
           target="_blank"
+          rel="noopener noreferrer"
           class="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
         >
           Source code
         </a>
       )
     }
+    {project.data.media?.kind === "youtube" && (
+      <a href={`https://www.youtube.com/watch?v=${project.data.media.id}`} target="_blank" rel="noopener noreferrer">
+        Watch demo
+      </a>
+    )}
+    {project.data.media?.kind === "recordings" && (
+      <a href={project.data.media.source} target="_blank" rel="noopener noreferrer">Original demo post</a>
+    )}
   </div>
+  {project.data.media?.kind === "youtube" ? (
+    <iframe
+      src={`https://www.youtube-nocookie.com/embed/${project.data.media.id}`}
+      title={`${project.data.title} video demo`}
+      class="w-full aspect-video rounded-lg mb-6 border-0"
+      loading="lazy"
+      allow="encrypted-media; picture-in-picture; fullscreen"
+      allowfullscreen
+      referrerpolicy="strict-origin-when-cross-origin"
+    />
+  ) : project.data.media?.kind === "recordings" ? (
+    project.data.media.clips.map((clip) => (
+      <video
+        src={clip.src}
+        poster={clip.poster}
+        width={clip.width}
+        height={clip.height}
+        aria-label={clip.title}
+        controls
+        playsinline
+        preload="none"
+        class="w-full h-auto rounded-lg mb-6"
+      >
+        <a href={clip.src}>{clip.title}</a>
+      </video>
+    ))
+  ) : project.data.media?.kind === "animation" ? (
+    <picture>
+      {project.data.preview && <source media="(prefers-reduced-motion: reduce)" srcset={project.data.preview.src} />}
+      <img
+        src={project.data.media.src}
+        alt={project.data.media.alt}
+        width={project.data.media.width}
+        height={project.data.media.height}
+        loading="lazy"
+        class="w-full h-auto"
+      />
+    </picture>
+  ) : project.data.preview && (
+    <img
+      src={project.data.preview.src}
+      alt={project.data.preview.alt}
+      width={project.data.preview.width}
+      height={project.data.preview.height}
+      loading="lazy"
+      class="w-full h-auto"
+    />
+  )}
   <Content />
 </Post>
