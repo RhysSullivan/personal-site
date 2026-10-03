@@ -1,0 +1,294 @@
+---
+import type { Note } from '../lib/notes/db';
+import { emptyDoc } from '../lib/notes/schema';
+
+interface Props {
+  note?: Note;
+}
+
+const { note } = Astro.props;
+
+const tools = [
+  { action: 'h1', label: 'H1', title: 'Heading 1' },
+  { action: 'h2', label: 'H2', title: 'Heading 2' },
+  { action: 'bold', label: 'B', title: 'Bold (⌘B)' },
+  { action: 'italic', label: 'I', title: 'Italic (⌘I)' },
+  { action: 'strike', label: 'S', title: 'Strikethrough' },
+  { action: 'code', label: '</>', title: 'Inline code' },
+  { action: 'link', label: 'Link', title: 'Link (⌘K)' },
+  { action: 'bulletList', label: '•', title: 'Bullet list' },
+  { action: 'orderedList', label: '1.', title: 'Numbered list' },
+  { action: 'taskList', label: '☐', title: 'Checklist' },
+  { action: 'blockquote', label: '❝', title: 'Quote' },
+  { action: 'codeBlock', label: '{ }', title: 'Code block' },
+];
+---
+
+<div
+  data-note-editor
+  data-id={note?.id ?? ''}
+  data-public={String(note?.isPublic ?? false)}
+  data-doc={JSON.stringify(note?.doc ?? emptyDoc)}
+>
+  <div class="flex items-center justify-between gap-4 mb-4 text-sm text-[var(--text-muted)]">
+    <a href="/notes" class="hover:text-[var(--text)] transition-colors">← notes</a>
+    <div class="flex items-center gap-4">
+      <span data-status aria-live="polite"></span>
+      <label class="flex items-center gap-2 cursor-pointer select-none">
+        <input type="checkbox" data-public-toggle class="accent-[var(--accent)]" checked={note?.isPublic} disabled={!note} />
+        public
+      </label>
+      <button type="button" data-delete class="hover:text-red-500 transition-colors" hidden={!note}>delete</button>
+    </div>
+  </div>
+
+  <textarea
+    data-title
+    rows="1"
+    placeholder="Untitled"
+    class="w-full resize-none overflow-hidden bg-transparent text-2xl font-semibold tracking-tight outline-none placeholder:text-[var(--text-muted)] placeholder:opacity-50"
+  >{note?.title ?? ''}</textarea>
+
+  <div
+    data-toolbar
+    class="sticky top-0 z-10 flex flex-wrap gap-1 py-2 my-2 border-b border-[var(--border)] bg-[var(--bg)]"
+  >
+    {tools.map(({ action, label, title }) => (
+      <button
+        type="button"
+        data-action={action}
+        title={title}
+        aria-label={title}
+        class="min-w-8 h-8 px-2 rounded text-sm font-mono text-[var(--text-muted)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text)] transition-colors data-[active]:bg-[var(--bg-secondary)] data-[active]:text-[var(--text)]"
+      >
+        {label}
+      </button>
+    ))}
+  </div>
+
+  <div data-content class="prose note-content min-h-[60vh] pt-2"></div>
+</div>
+
+<script>
+  import { Editor, type JSONContent } from '@tiptap/core';
+  import Placeholder from '@tiptap/extension-placeholder';
+  import { extensions } from '../lib/notes/schema';
+
+  type Status = 'saved' | 'unsaved' | 'saving' | 'error';
+  const statusText: Record<Status, string> = {
+    saved: 'saved',
+    unsaved: 'unsaved',
+    saving: 'saving…',
+    error: 'save failed — retrying',
+  };
+
+  const SAVE_DELAY_MS = 800;
+  const RETRY_DELAY_MS = 5000;
+
+  let teardown: (() => void) | null = null;
+
+  function mount(root: HTMLElement) {
+    const titleInput = root.querySelector<HTMLTextAreaElement>('[data-title]')!;
+    const content = root.querySelector<HTMLElement>('[data-content]')!;
+    const status = root.querySelector<HTMLElement>('[data-status]')!;
+    const publicToggle = root.querySelector<HTMLInputElement>('[data-public-toggle]')!;
+    const deleteButton = root.querySelector<HTMLButtonElement>('[data-delete]')!;
+    const toolbar = root.querySelector<HTMLElement>('[data-toolbar]')!;
+
+    let id = root.dataset.id || null;
+    let dirty = false;
+    let inFlight: Promise<void> | null = null;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const setStatus = (value: Status) => (status.textContent = statusText[value]);
+    if (id) setStatus('saved');
+
+    const editor = new Editor({
+      element: content,
+      extensions: [...extensions, Placeholder.configure({ placeholder: 'Start writing…' })],
+      content: JSON.parse(root.dataset.doc!) as JSONContent,
+      autofocus: id ? false : 'end',
+      editorProps: {
+        handleKeyDown: (_view, event) => {
+          if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+            event.preventDefault();
+            toggleLink();
+            return true;
+          }
+          return false;
+        },
+      },
+      onUpdate: () => markDirty(),
+      onTransaction: () => syncToolbar(),
+    });
+
+    const resizeTitle = () => {
+      titleInput.style.height = 'auto';
+      titleInput.style.height = `${titleInput.scrollHeight}px`;
+    };
+    resizeTitle();
+
+    function markDirty() {
+      dirty = true;
+      setStatus('unsaved');
+      clearTimeout(timer);
+      timer = setTimeout(save, SAVE_DELAY_MS);
+    }
+
+    async function request(body: object, keepalive = false) {
+      const response = await fetch(id ? `/api/notes/${id}` : '/api/notes', {
+        method: id ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        keepalive,
+      });
+      if (response.status === 401) {
+        window.location.href = `/auth/login?returnTo=${encodeURIComponent(location.pathname)}`;
+        throw new Error('signed out');
+      }
+      if (!response.ok) throw new Error(`save failed: ${response.status}`);
+      return (await response.json()) as { id: string };
+    }
+
+    async function save() {
+      clearTimeout(timer);
+      if (inFlight) await inFlight;
+      if (!dirty) return;
+      dirty = false;
+      setStatus('saving');
+      inFlight = request({ title: titleInput.value, doc: editor.getJSON() })
+        .then((result) => {
+          if (!id) {
+            id = result.id;
+            history.replaceState(history.state, '', `/notes/${id}`);
+            publicToggle.disabled = false;
+            deleteButton.hidden = false;
+          }
+          setStatus(dirty ? 'unsaved' : 'saved');
+        })
+        .catch(() => {
+          dirty = true;
+          setStatus('error');
+          timer = setTimeout(save, RETRY_DELAY_MS);
+        })
+        .finally(() => (inFlight = null));
+      await inFlight;
+    }
+
+    /** Best-effort flush when leaving the page; keepalive lets the request outlive it. */
+    function flush() {
+      // An in-flight create has no id yet; sending another would duplicate the note.
+      if (!dirty || (inFlight && !id)) return;
+      dirty = false;
+      void request({ title: titleInput.value, doc: editor.getJSON() }, true);
+    }
+
+    function toggleLink() {
+      if (editor.isActive('link')) {
+        editor.chain().focus().unsetLink().run();
+        return;
+      }
+      const href = window.prompt('Link URL');
+      if (href) editor.chain().focus().extendMarkRange('link').setLink({ href }).run();
+    }
+
+    const commands: Record<string, () => void> = {
+      h1: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+      h2: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+      bold: () => editor.chain().focus().toggleBold().run(),
+      italic: () => editor.chain().focus().toggleItalic().run(),
+      strike: () => editor.chain().focus().toggleStrike().run(),
+      code: () => editor.chain().focus().toggleCode().run(),
+      link: toggleLink,
+      bulletList: () => editor.chain().focus().toggleBulletList().run(),
+      orderedList: () => editor.chain().focus().toggleOrderedList().run(),
+      taskList: () => editor.chain().focus().toggleTaskList().run(),
+      blockquote: () => editor.chain().focus().toggleBlockquote().run(),
+      codeBlock: () => editor.chain().focus().toggleCodeBlock().run(),
+    };
+
+    const isActive: Record<string, () => boolean> = {
+      h1: () => editor.isActive('heading', { level: 1 }),
+      h2: () => editor.isActive('heading', { level: 2 }),
+    };
+
+    function syncToolbar() {
+      for (const button of toolbar.querySelectorAll<HTMLButtonElement>('[data-action]')) {
+        const action = button.dataset.action!;
+        button.toggleAttribute('data-active', isActive[action]?.() ?? editor.isActive(action));
+      }
+    }
+
+    // The site layout treats Escape as "go back"; keep it from leaving the editor.
+    root.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') event.stopPropagation();
+    });
+
+    toolbar.addEventListener('mousedown', (event) => event.preventDefault());
+    toolbar.addEventListener('click', (event) => {
+      const action = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-action]')?.dataset.action;
+      if (action) commands[action]!();
+    });
+
+    titleInput.addEventListener('input', () => {
+      resizeTitle();
+      markDirty();
+    });
+    titleInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || (event.key === 'ArrowDown' && titleInput.selectionStart === titleInput.value.length)) {
+        event.preventDefault();
+        editor.commands.focus('start');
+      }
+    });
+
+    publicToggle.addEventListener('change', async () => {
+      await save();
+      try {
+        await request({ isPublic: publicToggle.checked });
+      } catch {
+        publicToggle.checked = !publicToggle.checked;
+        setStatus('error');
+      }
+    });
+
+    deleteButton.addEventListener('click', async () => {
+      if (!id || !window.confirm('Delete this note?')) return;
+      clearTimeout(timer);
+      dirty = false;
+      const response = await fetch(`/api/notes/${id}`, { method: 'DELETE' });
+      if (response.ok) window.location.href = '/notes';
+      else setStatus('error');
+    });
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 's') {
+        event.preventDefault();
+        void save();
+      }
+    };
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (dirty && inFlight && !id) event.preventDefault();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    window.addEventListener('beforeunload', onBeforeUnload);
+    window.addEventListener('pagehide', flush);
+
+    return () => {
+      flush();
+      clearTimeout(timer);
+      document.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      window.removeEventListener('pagehide', flush);
+      editor.destroy();
+    };
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    const root = document.querySelector<HTMLElement>('[data-note-editor]');
+    if (root) teardown = mount(root);
+  });
+  document.addEventListener('astro:before-swap', () => {
+    teardown?.();
+    teardown = null;
+  });
+</script>

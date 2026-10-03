@@ -12,6 +12,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
     { slug: "index", title: "Rhys Sullivan", description: "Founder @ executor.sh", type: "home" },
     { slug: "blog", title: "Blog", description: "", type: "section" },
     { slug: "ideas", title: "Ideas", description: "", type: "section" },
+    { slug: "notes", title: "Notes", description: "", type: "section" },
     { slug: "projects", title: "Projects", description: "", type: "section" },
     { slug: "photos", title: "Space Photos", description: "", type: "section" },
     ...blog.map((post) => ({ slug: `blog/${post.slug}`, title: post.data.title, description: post.data.description, type: "blog" })),

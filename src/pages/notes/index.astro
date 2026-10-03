@@ -1,0 +1,72 @@
+---
+import Base from '../../layouts/Base.astro';
+import { listNotes } from '../../lib/notes/db';
+import { formatDate, noteTitle } from '../../lib/notes/render';
+import { isOwner } from '../../lib/notes/session';
+
+export const prerender = false;
+
+const owner = await isOwner(Astro.cookies);
+const notes = await listNotes({ includePrivate: owner });
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+---
+
+<Base title="Notes - Rhys Sullivan">
+  <div>
+    <div class="flex items-baseline justify-between mb-8">
+      <h1 class="text-2xl font-semibold tracking-tight">notes</h1>
+      {owner && (
+        <a href="/notes/new" class="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors" title="New note (n)">
+          + new
+        </a>
+      )}
+    </div>
+
+    {
+      notes.length === 0 ? (
+        <p class="text-[var(--text-muted)]">nothing here yet</p>
+      ) : (
+        <ul class="space-y-1">
+          {notes.map((note) => (
+            <li>
+              <a
+                href={`/notes/${note.id}`}
+                class="group flex items-baseline justify-between gap-4 py-2 px-3 -mx-3 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
+              >
+                <span class="font-medium group-hover:text-[var(--accent)] transition-colors truncate">
+                  {noteTitle(note.title, note.firstBlock)}
+                </span>
+                <span class="flex items-center gap-3 shrink-0 text-xs text-[var(--text-muted)]">
+                  {owner && !note.isPublic && <span>private</span>}
+                  <time datetime={note.updatedAt.toISOString()}>{formatDate(note.updatedAt)}</time>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    <div class="mt-16 text-xs text-[var(--text-muted)]">
+      {owner ? (
+        <form method="post" action="/auth/logout">
+          <button class="hover:text-[var(--text)] transition-colors">sign out</button>
+        </form>
+      ) : (
+        <a href="/auth/login?returnTo=/notes" class="opacity-50 hover:opacity-100 transition-opacity">sign in</a>
+      )}
+    </div>
+  </div>
+</Base>
+
+{owner && (
+  <script is:inline>
+    document.addEventListener('keydown', function onKey(event) {
+      if (location.pathname !== '/notes') return document.removeEventListener('keydown', onKey);
+      const target = event.target;
+      if (event.key !== 'n' || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+      location.href = '/notes/new';
+    });
+  </script>
+)}

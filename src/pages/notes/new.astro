@@ -1,0 +1,16 @@
+---
+import Base from '../../layouts/Base.astro';
+import NoteEditor from '../../components/NoteEditor.astro';
+import { isOwner } from '../../lib/notes/session';
+
+export const prerender = false;
+
+if (!(await isOwner(Astro.cookies))) {
+  return Astro.redirect('/auth/login?returnTo=/notes/new');
+}
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+---
+
+<Base title="New note - Rhys Sullivan" ogSlug="notes">
+  <NoteEditor />
+</Base>

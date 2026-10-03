@@ -1,0 +1,34 @@
+---
+import Base from '../../layouts/Base.astro';
+import NoteEditor from '../../components/NoteEditor.astro';
+import { getNote } from '../../lib/notes/db';
+import { formatDate, noteTitle, renderNote } from '../../lib/notes/render';
+import { isOwner } from '../../lib/notes/session';
+
+export const prerender = false;
+
+const owner = await isOwner(Astro.cookies);
+const note = await getNote(Astro.params.id!);
+if (!note || (!note.isPublic && !owner)) {
+  return new Response('Not found', { status: 404 });
+}
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+const displayTitle = noteTitle(note.title, note.doc.content?.[0]);
+const title = `${displayTitle} - Rhys Sullivan`;
+---
+
+<Base title={title} ogSlug="notes">
+  {owner ? (
+    <NoteEditor note={note} />
+  ) : (
+    <article>
+      <header class="mb-8">
+        <time class="text-sm text-[var(--text-muted)]" datetime={note.updatedAt.toISOString()}>
+          {formatDate(note.updatedAt)}
+        </time>
+        <h1 class="text-2xl font-semibold tracking-tight mt-2">{displayTitle}</h1>
+      </header>
+      <div class="prose note-content" set:html={renderNote(note.doc)} />
+    </article>
+  )}
+</Base>
