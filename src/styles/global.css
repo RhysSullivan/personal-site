@@ -109,3 +109,42 @@
     @apply border-[var(--border)] my-8;
   }
 }
+
+@layer components {
+  .note-content .ProseMirror {
+    @apply outline-none min-h-[60vh];
+  }
+
+  .note-content .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    @apply float-left h-0 pointer-events-none text-[var(--text-muted)] opacity-50;
+  }
+
+  .note-content ul[data-type='taskList'] {
+    @apply list-none pl-0;
+  }
+
+  .note-content ul[data-type='taskList'] li {
+    @apply flex items-start gap-2;
+  }
+
+  .note-content ul[data-type='taskList'] li > label {
+    @apply mt-[0.3rem] shrink-0;
+  }
+
+  .note-content ul[data-type='taskList'] li > div {
+    @apply flex-1;
+  }
+
+  .note-content ul[data-type='taskList'] li > div > p {
+    @apply mb-0;
+  }
+
+  .note-content ul[data-type='taskList'] li[data-checked='true'] > div {
+    @apply line-through opacity-60;
+  }
+
+  .note-content li > p {
+    @apply mb-1;
+  }
+}
