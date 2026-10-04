@@ -5,7 +5,7 @@
   "scripts": {
     "i": "bun install",
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node scripts/check-production-source.mjs && astro build && node scripts/check-gallery.mjs",
     "preview": "astro preview",
     "db:migrate": "bun scripts/migrate.ts"
   },
