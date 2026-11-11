@@ -8,6 +8,9 @@ export default defineConfig({
   site: 'https://rhys.dev',
   adapter: vercel(),
   integrations: [mdx(), tailwind(), ogPreview()],
+  image: {
+    service: { entrypoint: './src/lib/image-service.ts' },
+  },
   env: {
     schema: {
       DATABASE_URL: envField.string({ context: 'server', access: 'secret' }),
