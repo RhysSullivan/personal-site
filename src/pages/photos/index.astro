@@ -14,12 +14,48 @@ function getAspectRatio(photo: typeof photos[0]) {
 const aspectRatios = photos.map(p => getAspectRatio(p));
 const fullAspectRatios = photos.map(p => p.data.image.width / p.data.image.height);
 
+// Masonry positions are computed here so the grid is laid out by CSS before any
+// script runs. Each photo goes into the shortest column (as the old client script
+// did); its top is stored as a multiple of the column width plus a count of gaps,
+// which CSS turns into pixels with container query units at any width.
+const GAP = 16;
+type Slot = { col: number; u: number; n: number };
+function masonry(aspects: number[], cols: number, nominalColWidth: number) {
+  const units = new Array(cols).fill(0);
+  const gaps = new Array(cols).fill(0);
+  const height = (c: number) => units[c] * nominalColWidth + gaps[c] * GAP;
+  const slots: Slot[] = aspects.map((aspect) => {
+    const heights = units.map((_, c) => height(c));
+    const col = heights.indexOf(Math.min(...heights));
+    const slot = { col, u: units[col], n: gaps[col] };
+    units[col] += 1 / aspect;
+    gaps[col] += 1;
+    return slot;
+  });
+  const tallest = units.map((_, c) => height(c)).reduce((best, h, c, all) => (h > all[best] ? c : best), 0);
+  return { slots, total: { u: units[tallest], n: gaps[tallest] } };
+}
+
+// Column widths at typical sizes for each breakpoint; they only break near-ties.
+const layouts = {
+  m2c: masonry(aspectRatios, 2, 440),
+  m3c: masonry(aspectRatios, 3, 507),
+  m2f: masonry(fullAspectRatios, 2, 440),
+  m3f: masonry(fullAspectRatios, 3, 507),
+};
+const cardVars = (i: number) => Object.entries(layouts)
+  .map(([name, { slots }]) => `--${name}-col: ${slots[i].col}; --${name}-u: ${slots[i].u}; --${name}-n: ${slots[i].n};`)
+  .join(' ');
+const gridVars = Object.entries(layouts)
+  .map(([name, { total }]) => `--${name}-hu: ${total.u}; --${name}-hn: ${total.n};`)
+  .join(' ');
+
 // One column on phones, two up to 1024px, then three inside the 1600px page.
 const gridSizes = '(max-width: 639px) calc(100vw - 48px), (max-width: 1023px) calc(50vw - 32px), (max-width: 1600px) calc(33.34vw - 27px), 507px';
 ---
 
 <Base title="Photos - Rhys Sullivan" description="Astrophotography and space photos." wide>
-  <div>
+  <div class="photo-page">
     <header class="photo-header">
       <div>
         <h1 class="text-2xl font-semibold tracking-tight mb-2">space photos</h1>
@@ -38,12 +74,13 @@ const gridSizes = '(max-width: 639px) calc(100vw - 48px), (max-width: 1023px) ca
     {photos.length === 0 ? (
       <p class="text-[var(--text-muted)]">photos coming soon</p>
     ) : (
-      <div id="photo-grid" data-view="cropped" data-aspects={JSON.stringify(aspectRatios)} data-full-aspects={JSON.stringify(fullAspectRatios)}>
+      <div id="photo-grid" data-view="cropped" style={gridVars}>
         {photos.map((photo, i) => (
           <a
             href={`/photos/${photo.slug}`}
             class="photo-card group block rounded-lg"
             data-index={i}
+            style={cardVars(i)}
           >
             <figure class="photo-figure">
               <div class="overflow-hidden rounded-lg bg-[var(--bg-secondary)]">
@@ -112,10 +149,41 @@ const gridSizes = '(max-width: 639px) calc(100vw - 48px), (max-width: 1023px) ca
       line-height: 1rem;
       color: var(--text-muted);
     }
-    /* Wider screens: a script lays out the columns, captions sit over the photo. */
+    /* Wider screens: masonry columns placed from the build-time layout, captions sit over the photo. */
+    .photo-page {
+      container-type: inline-size;
+    }
     @media (min-width: 640px) {
       #photo-grid {
         display: block;
+        --cols: 2;
+        --hu: var(--m2c-hu);
+        --hn: var(--m2c-hn);
+      }
+      #photo-grid[data-view='uncropped'] {
+        --hu: var(--m2f-hu);
+        --hn: var(--m2f-hn);
+      }
+      #photo-grid,
+      .photo-card {
+        --col-width: calc((100cqw - (var(--cols) - 1) * 16px) / var(--cols));
+      }
+      #photo-grid {
+        height: calc(var(--hu) * var(--col-width) + var(--hn) * 16px);
+      }
+      .photo-card {
+        --col: var(--m2c-col);
+        --u: var(--m2c-u);
+        --n: var(--m2c-n);
+        position: absolute;
+        width: var(--col-width);
+        left: calc(var(--col) * (var(--col-width) + 16px));
+        top: calc(var(--u) * var(--col-width) + var(--n) * 16px);
+      }
+      #photo-grid[data-view='uncropped'] .photo-card {
+        --col: var(--m2f-col);
+        --u: var(--m2f-u);
+        --n: var(--m2f-n);
       }
       .photo-details {
         position: absolute;
@@ -133,6 +201,27 @@ const gridSizes = '(max-width: 639px) calc(100vw - 48px), (max-width: 1023px) ca
       }
       .photo-date {
         color: rgb(255 255 255 / 70%);
+      }
+    }
+    @media (min-width: 1024px) {
+      #photo-grid {
+        --cols: 3;
+        --hu: var(--m3c-hu);
+        --hn: var(--m3c-hn);
+      }
+      #photo-grid[data-view='uncropped'] {
+        --hu: var(--m3f-hu);
+        --hn: var(--m3f-hn);
+      }
+      .photo-card {
+        --col: var(--m3c-col);
+        --u: var(--m3c-u);
+        --n: var(--m3c-n);
+      }
+      #photo-grid[data-view='uncropped'] .photo-card {
+        --col: var(--m3f-col);
+        --u: var(--m3f-u);
+        --n: var(--m3f-n);
       }
     }
     @media (min-width: 640px) and (hover: hover) and (pointer: fine) {
@@ -213,66 +302,18 @@ const gridSizes = '(max-width: 639px) calc(100vw - 48px), (max-width: 1023px) ca
   </style>
 
   <script is:inline>
-    (function() {
-      const gap = 16;
-      
-      function layout() {
-        const grid = document.getElementById('photo-grid');
-        if (!grid) return;
-        
-        const gridWidth = grid.offsetWidth;
-        // Guard: don't layout if grid has no width yet
-        if (gridWidth <= 0) {
-          requestAnimationFrame(layout);
-          return;
-        }
-        
-        const items = Array.from(grid.children);
-        const cols = window.matchMedia('(min-width: 1024px)').matches ? 3 : window.matchMedia('(min-width: 640px)').matches ? 2 : 1;
-        if (cols === 1) {
-          // The stylesheet lays out the single column; drop any positions from a wider layout.
-          items.forEach(item => {
-            item.style.position = item.style.width = item.style.left = item.style.top = '';
+    // astro:page-load fires on initial load AND after every View Transition
+    document.addEventListener('astro:page-load', function() {
+      document.querySelectorAll('[data-photo-view]').forEach(button => {
+        button.onclick = function() {
+          const grid = document.getElementById('photo-grid');
+          if (!grid) return;
+          grid.dataset.view = button.dataset.photoView;
+          document.querySelectorAll('[data-photo-view]').forEach(option => {
+            option.setAttribute('aria-pressed', String(option === button));
           });
-          grid.style.height = '';
-          return;
-        }
-
-        const aspects = JSON.parse(grid.dataset.view === 'uncropped' ? grid.dataset.fullAspects : grid.dataset.aspects);
-        const colWidth = (gridWidth - gap * (cols - 1)) / cols;
-        const colHeights = new Array(cols).fill(0);
-        
-        items.forEach((item, i) => {
-          const shortestCol = colHeights.indexOf(Math.min(...colHeights));
-          const height = colWidth / aspects[i];
-          
-          item.style.position = 'absolute';
-          item.style.width = colWidth + 'px';
-          item.style.left = (shortestCol * (colWidth + gap)) + 'px';
-          item.style.top = colHeights[shortestCol] + 'px';
-          
-          colHeights[shortestCol] += height + gap;
-        });
-        
-        grid.style.height = Math.max(...colHeights) + 'px';
-      }
-      
-      // astro:page-load fires on initial load AND after every View Transition
-      document.addEventListener('astro:page-load', function() {
-        document.querySelectorAll('[data-photo-view]').forEach(button => {
-          button.onclick = function() {
-            const grid = document.getElementById('photo-grid');
-            if (!grid) return;
-            grid.dataset.view = button.dataset.photoView;
-            document.querySelectorAll('[data-photo-view]').forEach(option => {
-              option.setAttribute('aria-pressed', String(option === button));
-            });
-            layout();
-          };
-        });
-        requestAnimationFrame(layout);
+        };
       });
-      window.addEventListener('resize', layout);
-    })();
+    });
   </script>
 </Base>

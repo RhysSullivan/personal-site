@@ -1,6 +1,6 @@
 ---
 import { ViewTransitions } from 'astro:transitions';
-import { getImage } from 'astro:assets';
+import { getImage, Font } from 'astro:assets';
 import Nav from '../components/Nav.astro';
 import '../styles/global.css';
 
@@ -49,20 +49,8 @@ const ogImage = `/og/${slug}.png`;
     <link rel="alternate" type="application/rss+xml" title="Rhys Sullivan - Space Photos" href="/photos/rss.xml" />
     <link rel="alternate" type="application/rss+xml" title="Rhys Sullivan - Ideas" href="/ideas/rss.xml" />
     <link rel="alternate" type="application/rss+xml" title="Rhys Sullivan - Projects" href="/projects/rss.xml" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap"
-      rel="stylesheet"
-      media="print"
-      onload="this.media='all'"
-    />
-    <noscript>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap"
-        rel="stylesheet"
-      />
-    </noscript>
+    <Font cssVariable="--font-inter" preload />
+    <Font cssVariable="--font-jetbrains-mono" />
     <title>{title}</title>
     <ViewTransitions />
     <script is:inline>
@@ -116,7 +104,15 @@ const ogImage = `/og/${slug}.png`;
   </head>
   <body>
     {optimizedBg && (
-      <div class="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat opacity-[0.03] dark:opacity-[0.08] rotate-90 sm:rotate-0 scale-[1.8] sm:scale-100 origin-center" style={`background-image: url('${optimizedBg.src}')`}></div>
+      <img
+        src={optimizedBg.src}
+        alt=""
+        aria-hidden="true"
+        decoding="async"
+        fetchpriority="low"
+        onload="this.dataset.loaded = ''"
+        class="space-bg fixed inset-0 -z-10 w-full h-full object-cover object-center pointer-events-none rotate-90 sm:rotate-0 scale-[1.8] sm:scale-100 origin-center"
+      />
     )}
     <div class="px-6 mx-auto max-w-[750px]">
       <Nav />
