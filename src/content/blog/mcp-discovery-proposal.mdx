@@ -1,0 +1,80 @@
+---
+title: "MCP connections should be as open as the web"
+description: "A proposal for adding MCP servers by URL, with per-user security scanning, instead of submitting to every agent platform's app store."
+date: 2026-11-23
+draft: false
+---
+
+Adding an MCP to your agent should be as easy as visiting a website. Products should not be having to maintain large catalogs, we should be leveraging primitives of the web (DNS as ownership, well-known paths) to effectively scale catalogs of apps to thousands or hundreds of thousands of apps.
+
+## 1. Support adding arbitrary MCPs
+
+The user comes to your agent and says "Please add [mcp]", alternatively they may say "Please add [product]" in which case your agent has to find the MCP URL / get it from a well-known path.
+
+Your agent should support easily connecting to whatever MCP the user is trying to use without additional friction.
+
+## 2. On add, scan that MCP for anything malicious
+
+The resources that MCP lists are then scanned for security purposes.
+
+When the tools of the MCP server change, rescan it for security.
+
+If an MCP server fails security checks, that can go into a console the developer is able to view via proving ownership of the domain.
+
+## 3. Check a /.well-known path for provider information
+
+Along with this, you can then check a /.well-known path to figure out if this is a public MCP server that wants to be listed in a global marketplace.
+
+The information products need about an MCP server:
+
+- What it is: name, description, icon
+- Where to connect and how to sign in
+- Who runs it: website, privacy policy, terms, support contact
+- A way for the developer to prove they own the domain, for the console
+
+[MCP Server Cards](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/seps/2127-mcp-server-cards.md) already cover what it is and where to connect, the rest would need adding. The tools aren't part of it, those come from the per-user scan.
+
+## 4. (Optional) auto add to your catalog
+
+If it has one, then, you can add it automatically to the marketplace, or, once N users start using it.
+
+Plugin submissions make the ecosystem of connectors worse for everyone, instead we should do our best to move to a default ok process that 99% of servers pass.
+
+## Conclusion
+
+We're pretty close to this world today, we're just missing automatic adding to catalogs and seamless adding of MCP servers via natural language chat.
+
+Large consolidated plugin stores are bad for the user, for the developer, and for the person running the plugin store. This problem was solved via the web 30 years ago, and while there are new security constraints around things like prompt injection, we should solve those problems rather than creating larger ones.
+
+<details>
+<summary>Q&A</summary>
+
+**What about KYC?**
+
+You don't have to KYC to visit a website in your browser, you shouldn't have to in this.
+
+**A server can show the scanner something different from what users get, or change how a tool behaves on its end without changing its definition**
+
+Nothing protects against this.
+
+**Prompt injection comes through tool results, which a scan on connect never sees**
+
+You can prompt inject through external data (web fetch, browser data, hell even through emails that you connect through the Gmail tool), MCP outputs should be treated as untrusted.
+
+**An attacker can serve a bad tool set to a few targeted users while everyone else sees clean tools**
+
+It's a per-user review.
+
+**A domain isn't a person, platforms want someone they can ban or hold accountable**
+
+The goal is to make MCP connections as open as the web.
+
+**The "N users" threshold can be gamed with fake accounts**
+
+Raise the threshold then, it's up to the platform to decide.
+
+**If an auto-promoted server leaks data, the platform's catalog put it there**
+
+Then don't auto-promote, just don't prevent users from using their own MCPs in an easy way.
+
+</details>
